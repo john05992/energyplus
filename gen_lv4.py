@@ -277,8 +277,7 @@ def make_html(do, si, dong, grade, keywords):
   }}
   </script>
 
-  <link rel="preload" href="/css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/css/style.css"></noscript>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 

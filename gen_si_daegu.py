@@ -220,7 +220,7 @@ def make_html(gu, data):
         <span class="logo-text">동네학원 모여라</span>
       </a>
       <nav class="site-nav">
-        <a href="/학원정보/">학원정보</a>
+        
       </nav>
     </div>
   </header>

@@ -350,7 +350,6 @@ def make_location(level: int, si: str, dong: str, dong_loc: dict,
     return (
         '    <section class="section">\n'
         '      <div class="container">\n'
-        '        <h2 class="section-title">학원 위치 사진</h2>\n'
         + '\n'.join(imgs) + '\n'
         '      </div>\n'
         '    </section>'

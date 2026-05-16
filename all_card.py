@@ -283,8 +283,8 @@ def _card_img_url(area_name: str, academy_name: str, base_img: str) -> str:
     base = base_img[:idx]
     return (
         f'{base}w_740,h_400,c_fill,q_auto,f_auto/'
-        f'l_text:NanumGothic_28_bold:{encoded},'
-        f'co_white,g_south_west,x_16,y_12,b_rgb:00000055/{rest}'
+        f'l_text:NanumGothic_10:{encoded},'
+        f'co_white,o_25,g_south_west,x_10,y_6/{rest}'
     )
 
 

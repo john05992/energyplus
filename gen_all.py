@@ -183,8 +183,8 @@ def cld_url(public_id: str, text: str, w: int = 800, h: int = 0, crop: str = '')
         size += f',c_{crop}'
     return (
         f'{CLOUD}/{size},q_auto,f_auto'
-        f'/l_text:NanumGothic_45_bold:{enc},'
-        f'co_white,g_south_west,x_30,y_30,b_rgb:00000066'
+        f'/l_text:NanumGothic_10:{enc},'
+        f'co_white,o_25,g_south_west,x_10,y_6'
         f'/{public_id}.webp'
     )
 
@@ -245,27 +245,53 @@ def build_kw_meta(level: int, do: str, si: str, dong: str, grade: str, kw: str) 
 def first_slide_url(akw: str, level: int, kw: str = '') -> str:
     pid, alt_base = SLIDER_IMGS[0]
     text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-    return cld_url(pid, text, w=800, h=450, crop='fill')
+    return cld_url(pid, text, w=800, h=600, crop='fill')
 
 
-def make_slider(akw: str, level: int, kw: str = '') -> str:
-    items = []
+def make_hero(akw: str, level: int, kw: str, title: str) -> str:
+    """히어로 섹션: 슬라이더(우측) + H1(좌측) 통합."""
+    slides = []
     for i, (pid, alt_base) in enumerate(SLIDER_IMGS):
         text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-        src  = cld_url(pid, text, w=800, h=450, crop='fill')
+        src  = cld_url(pid, text, w=800, h=600, crop='fill')
         if i == 0:
             attrs = 'loading="eager" fetchpriority="high" decoding="sync"'
         else:
             attrs = 'loading="lazy" decoding="async"'
-        items.append(
-            f'        <div class="slide">'
-            f'<img src="{src}" alt="{text}" {attrs} width="800" height="450">'
+        slides.append(
+            f'          <div class="slide">'
+            f'<img src="{src}" alt="{text}" {attrs} width="800" height="600">'
             f'</div>'
         )
+    slides_html = '\n'.join(slides)
+    n = len(SLIDER_IMGS)
+    dots_html   = '\n'.join(
+        f'          <span class="sl-dot{"  sl-dot-active" if i == 0 else ""}"></span>'
+        for i in range(n)
+    )
+
+    badge   = f'{akw} 학원 정보'
+    tagline = '영어·수학·국어 학원을<br>지역별로 쉽게 찾아보세요'
+
     return (
-        '    <section class="slider-section">\n'
-        '      <div class="slider">\n'
-        + '\n'.join(items) + '\n'
+        '    <section class="hero">\n'
+        '      <div class="hero-inner">\n'
+        '        <div class="hero-img-wrap">\n'
+        '          <div class="sl-track">\n'
+        f'{slides_html}\n'
+        '          </div>\n'
+        '          <div class="sl-dots">\n'
+        f'{dots_html}\n'
+        '          </div>\n'
+        '        </div>\n'
+        '        <div class="hero-text">\n'
+        '          <h1 class="site-headline">\n'
+        f'            <span class="headline-badge">{badge}</span>\n'
+        f'            <span class="headline-main">{title}</span>\n'
+        '            <span class="headline-sub">우리 동네 학원, 지금 바로 찾아보세요</span>\n'
+        '          </h1>\n'
+        f'          <p class="site-tagline">{tagline}</p>\n'
+        '        </div>\n'
         '      </div>\n'
         '    </section>'
     )
@@ -275,10 +301,11 @@ def make_detail(akw: str, level: int, kw: str = '') -> str:
     imgs = []
     for pid, alt_base in DETAIL_IMGS:
         text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-        src  = cld_url(pid, text, w=800, h=600, crop='fill')
+        # 원본 680×1300 비율 그대로 (crop 없음) — w=680 자연 스케일
+        src  = cld_url(pid, text, w=680)
         imgs.append(
             f'        <img src="{src}" alt="{text}" '
-            f'loading="lazy" decoding="async" width="800" height="600">'
+            f'loading="lazy" decoding="async" width="680" height="1300">'
         )
     return (
         '    <section class="detail-section">\n'
@@ -598,18 +625,52 @@ def make_head(title: str, desc: str, canon: str, og_img: str, kw_meta: str,
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap"></noscript>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-  .slider-section{{width:100%;overflow:hidden;background:#000}}
-  .slider{{position:relative;width:100%;padding-top:56.25%}}
-  .slide{{position:absolute;inset:0;opacity:0;animation:slShow 21s linear infinite}}
+  /* ── 히어로 ─────────────────────────────── */
+  .hero{{background:#1a1a2e;overflow:hidden}}
+  .hero-inner{{display:flex;flex-direction:row-reverse;align-items:stretch;max-width:1200px;margin:0 auto;min-height:420px}}
+  .hero-img-wrap{{flex:0 0 48%;overflow:hidden;position:relative}}
+  .hero-text{{flex:1;padding:2.5rem 2.5rem 2.5rem 3rem;display:flex;flex-direction:column;justify-content:center;color:#fff}}
+  /* ── 슬라이더 (가로 슬라이드) ─────────── */
+  .sl-track{{display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}}
+  .slide{{flex:0 0 100%;height:100%;overflow:hidden}}
   .slide img{{width:100%;height:100%;object-fit:cover;display:block}}
-  .slide:nth-child(1){{animation-delay:0s}}
-  .slide:nth-child(2){{animation-delay:3s}}
-  .slide:nth-child(3){{animation-delay:6s}}
-  .slide:nth-child(4){{animation-delay:9s}}
-  .slide:nth-child(5){{animation-delay:12s}}
-  .slide:nth-child(6){{animation-delay:15s}}
-  .slide:nth-child(7){{animation-delay:18s}}
-  @keyframes slShow{{0%,14.2%{{opacity:1}}19%,100%{{opacity:0}}}}
+  .sl-dots{{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2}}
+  .sl-dot{{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45);transition:background .3s,transform .3s;cursor:pointer}}
+  .sl-dot-active{{background:#fff;transform:scale(1.3)}}
+  /* ── H1 배지 스타일 ─────────────────────── */
+  .site-headline{{display:flex;flex-direction:column;gap:.4rem;margin:0 0 1.2rem}}
+  .headline-badge{{display:inline-block;background:#F97316;color:#fff;font-size:.75rem;font-weight:700;padding:.3rem .9rem;border-radius:20px;letter-spacing:.06em;width:fit-content}}
+  .headline-main{{font-size:1.75rem;font-weight:800;color:#fff;line-height:1.25;word-break:keep-all}}
+  .headline-sub{{font-size:.95rem;color:rgba(255,255,255,.65)}}
+  .site-tagline{{font-size:.88rem;color:rgba(255,255,255,.45);line-height:1.8}}
+  /* ── 상세 이미지 ────────────────────────── */
+  .detail-section .container{{display:flex;flex-direction:column;align-items:center;gap:0}}
+  .detail-section img{{width:100%;max-width:680px;height:auto;display:block}}
+  /* ── content-list 박스형 ────────────────── */
+  .content-list{{list-style:none;padding:0;margin:.8rem 0 0;display:grid;gap:.5rem}}
+  .content-list li{{background:#fff8f3;border-left:3px solid #F97316;padding:.7rem 1rem;border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.6;color:#333}}
+  /* ── info-table (2열) ───────────────────── */
+  .info-table{{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}}
+  .info-table th{{background:#F97316;color:#fff;padding:.6rem 1rem;text-align:left;font-size:.85rem;font-weight:600;white-space:nowrap;width:7em}}
+  .info-table td{{padding:.65rem 1rem;font-size:.9rem;border-bottom:1px solid #f0f0f0;color:#333;word-break:keep-all}}
+  .info-table tr:last-child td{{border-bottom:none}}
+  /* ── compare-table (3열) ────────────────── */
+  .compare-table{{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:.85rem}}
+  .compare-table thead th{{background:#1a1a2e;color:#fff;padding:.65rem .8rem;text-align:center;font-weight:600}}
+  .compare-table tbody td{{padding:.6rem .8rem;border-bottom:1px solid #f0f0f0;color:#333;text-align:center;vertical-align:top}}
+  .compare-table tbody tr:nth-child(even){{background:#fafafa}}
+  .compare-table tbody tr:last-child td{{border-bottom:none}}
+  /* ── FAQ dl/dt/dd ────────────────────────── */
+  .faq-list{{margin:.8rem 0 0}}
+  .faq-q{{font-weight:700;color:#F97316;padding:.8rem 1rem .4rem;background:#fff8f3;border-radius:8px 8px 0 0;margin-top:.8rem;font-size:.9rem;display:block}}
+  .faq-a{{margin:0;padding:.5rem 1rem .8rem;background:#fff8f3;border-radius:0 0 8px 8px;font-size:.88rem;color:#555;line-height:1.65;display:block}}
+  /* ── 모바일 ─────────────────────────────── */
+  @media(max-width:768px){{
+    .hero-inner{{flex-direction:column;min-height:auto}}
+    .hero-img-wrap{{flex:none;width:100%;height:260px;position:relative}}
+    .hero-text{{padding:1.5rem 1rem}}
+    .headline-main{{font-size:1.35rem}}
+  }}
   </style>
   <script type="application/ld+json">
 {jld}
@@ -665,7 +726,7 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     s8 = render_section8(data.get('section8', {}))
 
     # 기타 섹션
-    slider   = make_slider(akw, level, kw)
+    hero     = make_hero(akw, level, kw, title)
     detail   = make_detail(akw, level, kw)
     location = make_location(level, si, dong, dong_loc, loc_ids, si_loc, akw)
     region   = make_region_list(level, do, si, dong, grade, grade_kws, si_dong_map)
@@ -675,17 +736,8 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     nav_do  = f'<a href="/{do}/">지역별</a>' if level >= 2 else '<a href="/">지역별</a>'
     nav_si  = f'<a href="/{do}/{si}/">학원찾기</a>' if level >= 3 else ''
 
-    h1_section = (
-        '    <section class="page-title-section">\n'
-        '      <div class="container">\n'
-        f'        <h1 class="page-title">{title}</h1>\n'
-        '      </div>\n'
-        '    </section>'
-    )
-
     sections = '\n\n'.join(filter(None, [
-        slider,
-        h1_section,
+        hero,
         detail,
         s1,
         location,
@@ -750,6 +802,25 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     </div>
   </footer>
 
+  <script>
+  (function(){{
+    var track=document.querySelector('.sl-track');
+    var dots=document.querySelectorAll('.sl-dot');
+    if(!track||!dots.length)return;
+    var n=dots.length,idx=0;
+    function go(i){{
+      idx=(i+n)%n;
+      track.style.transform='translateX(-'+idx*100+'%)';
+      dots.forEach(function(d,j){{
+        d.classList.toggle('sl-dot-active',j===idx);
+      }});
+    }}
+    dots.forEach(function(d,i){{d.addEventListener('click',function(){{go(i);}});}});
+    var timer=setInterval(function(){{go(idx+1);}},3500);
+    track.parentElement.addEventListener('mouseenter',function(){{clearInterval(timer);}});
+    track.parentElement.addEventListener('mouseleave',function(){{timer=setInterval(function(){{go(idx+1);}},3500);}});
+  }})();
+  </script>
   <script type="text/javascript" src="//wcs.pstatic.net/wcslog.js" defer></script>
   <script type="text/javascript">
   if(!wcs_add) var wcs_add = {{}};

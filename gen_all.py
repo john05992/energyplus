@@ -113,16 +113,20 @@ def load_location_ids():
 
 
 def load_dong_loc_map():
-    """학원목록.txt col3(동) → col4(위치사진키)"""
+    """학원목록.txt col3(동) → col4(위치사진키), 키 없는 줄은 이전 키 이어받음"""
     result = {}
+    last_loc = ''
     with open(BASE / '학원목록.txt', encoding='utf-8') as f:
         for line in f:
             cols = line.rstrip('\n').split('\t')
-            if len(cols) >= 5:
-                dong = cols[3].strip()
-                loc  = cols[4].strip()
-                if dong and loc:
-                    result[dong] = loc
+            if len(cols) < 4:
+                continue
+            dong = cols[3].strip()
+            loc  = cols[4].strip() if len(cols) >= 5 else ''
+            if loc:
+                last_loc = loc
+            if dong and last_loc:
+                result[dong] = last_loc
     return result
 
 

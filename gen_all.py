@@ -758,11 +758,6 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
         </picture>
         <span class="logo-text">{BRAND}</span>
       </a>
-      <nav class="site-nav">
-        <a href="/">전국</a>
-        {nav_do}
-        {nav_si}
-      </nav>
     </div>
   </header>
 

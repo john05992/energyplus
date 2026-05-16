@@ -309,7 +309,7 @@ def make_detail(akw: str, level: int, kw: str = '') -> str:
         src  = cld_url(pid, text, w=480)
         imgs.append(
             f'        <img src="{src}" alt="{text}" '
-            f'loading="lazy" decoding="async" width="480" height="918">'
+            f'loading="eager" decoding="async" width="480" height="918">'
         )
     return (
         '    <section class="detail-section">\n'

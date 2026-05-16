@@ -245,7 +245,7 @@ def build_kw_meta(level: int, do: str, si: str, dong: str, grade: str, kw: str) 
 def first_slide_url(akw: str, level: int, kw: str = '') -> str:
     pid, alt_base = SLIDER_IMGS[0]
     text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-    return cld_url(pid, text, w=800, h=800, crop='fill', angle=90)
+    return cld_url(pid, text, w=600, h=600, crop='fill', angle=90)
 
 
 def make_hero(akw: str, level: int, kw: str, title: str) -> str:
@@ -255,14 +255,14 @@ def make_hero(akw: str, level: int, kw: str, title: str) -> str:
         text  = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
         # 1번 이미지(학원정면)는 90도 회전 보정
         rot   = 90 if i == 0 else 0
-        src   = cld_url(pid, text, w=800, h=800, crop='fill', angle=rot)
+        src   = cld_url(pid, text, w=600, h=600, crop='fill', angle=rot)
         if i == 0:
             attrs = 'loading="eager" fetchpriority="high" decoding="sync"'
         else:
             attrs = 'loading="lazy" decoding="async"'
         slides.append(
             f'          <div class="slide">'
-            f'<img src="{src}" alt="{text}" {attrs} width="800" height="800">'
+            f'<img src="{src}" alt="{text}" {attrs} width="600" height="600">'
             f'</div>'
         )
     slides_html = '\n'.join(slides)
@@ -289,11 +289,11 @@ def make_hero(akw: str, level: int, kw: str, title: str) -> str:
         '          </div>\n'
         '        </div>\n'
         '        <div class="hero-text">\n'
-        '          <h1 class="site-headline">\n'
-        f'            <span class="headline-badge">{badge}</span>\n'
-        f'            <span class="headline-main">{title}</span>\n'
-        '            <span class="headline-sub">우리 동네 학원, 지금 바로 찾아보세요</span>\n'
-        '          </h1>\n'
+        '          <div class="site-headline">\n'
+        f'            <p class="headline-badge">{badge}</p>\n'
+        f'            <h1 class="headline-main">{title}</h1>\n'
+        '            <p class="headline-sub">우리 동네 학원, 지금 바로 찾아보세요</p>\n'
+        '          </div>\n'
         f'          <p class="site-tagline">{tagline}</p>\n'
         '        </div>\n'
         '      </div>\n'
@@ -305,11 +305,11 @@ def make_detail(akw: str, level: int, kw: str = '') -> str:
     imgs = []
     for pid, alt_base in DETAIL_IMGS:
         text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-        # 원본 680×1300 비율 그대로 (crop 없음) — w=680 자연 스케일
-        src  = cld_url(pid, text, w=680)
+        # 원본 680×1300 비율 그대로 (crop 없음) — w=480 자연 스케일
+        src  = cld_url(pid, text, w=480)
         imgs.append(
             f'        <img src="{src}" alt="{text}" '
-            f'loading="lazy" decoding="async" width="680" height="1300">'
+            f'loading="lazy" decoding="async" width="480" height="918">'
         )
     return (
         '    <section class="detail-section">\n'
@@ -341,10 +341,10 @@ def make_location(level: int, si: str, dong: str, dong_loc: dict,
     imgs = []
     for n, pid in enumerate(pids, 1):
         text = f'{akw} 위치사진{n}'
-        src  = cld_url(pid, text, w=800, h=450, crop='fill')
+        src  = cld_url(pid, text, w=500, h=281, crop='fill')
         imgs.append(
             f'        <img src="{src}" alt="{akw} 위치사진{n}" '
-            f'loading="lazy" decoding="async" width="800" height="450">'
+            f'loading="lazy" decoding="async" width="500" height="281">'
         )
 
     return (
@@ -622,15 +622,11 @@ def make_head(title: str, desc: str, canon: str, og_img: str, kw_meta: str,
   <link rel="icon" type="image/png" sizes="16x16" href="https://energyplus.kr/images/favicon-16x16.png">
   <link rel="apple-touch-icon" href="https://energyplus.kr/images/로고.jpg">
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-{preload_lcp}  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap"></noscript>
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://nam.veta.naver.com">
+{preload_lcp}  <link rel="stylesheet" href="/css/style.css">
   <style>
   /* ── 슬라이더 (style.css hero-img-wrap 안에서 동작) ── */
-  .hero-img-wrap{{position:relative;overflow:hidden}}
+  .hero-img-wrap{{position:relative;overflow:hidden;aspect-ratio:1/1;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.12)}}
   .sl-track{{position:absolute;inset:0;display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}}
   .slide{{flex:0 0 100%;height:100%;overflow:hidden}}
   .slide img{{width:100%;height:100%;object-fit:cover;display:block}}
@@ -732,8 +728,8 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     sections = '\n\n'.join(filter(None, [
         hero,
         detail,
-        s1,
         location,
+        s1,
         s2,
         s3,
         s4,

@@ -1,0 +1,1003 @@
+================================================================
+  새 HTML 생성 py 스크립트 설계 가이드
+  작성: 2026-05-16
+================================================================
+
+
+================================================================
+[ 0. 목표 ]
+================================================================
+
+목적:
+  energyplus.kr (동네학원 찾기 - 에너지+) 사이트의
+  전체 30,613개 index.html을 Python 스크립트 1회 실행으로 완전 생성.
+
+  기존 HTML 파일을 전부 삭제하고 새로 만드는 방식.
+  수정이 아닌 완전 새 생성 (overwrite).
+  기존 HTML 파싱/상속 없음 — 모든 내용을 소스 3종 + NEIS API로 생성.
+
+입력 소스 3종:
+  1. 학원목록.txt              → 도/시/동 조합 436개
+  2. 학년학원키워드.txt         → 36개 키워드 (초등10 중등14 고등12)
+     메인학원키워드.txt         → 29개 키워드
+  3. 본문뽑기/[경로]/result.html → 본문 콘텐츠 JSON
+
+추가 소스:
+  4. NEIS API                  → 전 레벨 학원카드 16개 실시간 호출
+
+출력:
+  새로운학원/[도]/[시]/[동]/[학년]/[키워드]/index.html
+  총 30,613개 파일
+
+생성 스크립트 파일명 (예정): gen_all.py
+
+
+================================================================
+[ 1. 총 페이지 수 ]
+================================================================
+
+  루트            :      1개
+  레벨1 (도)      :     16개
+  레벨2 (시/구)   :     76개
+  레벨3 (동)      :    436개   ← 학원목록.txt 동 수
+  레벨4 (학년)    :  1,744개   (436 × 4학년)
+  레벨5 (키워드)  : 28,340개   (436 × 65키워드)
+    ├ 초등   10개 × 436 =  4,360
+    ├ 중등   14개 × 436 =  6,104
+    ├ 고등   12개 × 436 =  5,232
+    └ 메인학원 29개 × 436 = 12,644
+  ─────────────────────────────
+  합계            : 30,613개
+
+
+================================================================
+[ 2. URL 경로 구조 ]
+================================================================
+
+  레벨1: /도/                         예) /서울특별시/
+  레벨2: /도/시/                       예) /서울특별시/마포구/
+  레벨3: /도/시/동/                    예) /서울특별시/마포구/상암동/
+  레벨4: /도/시/동/학년/               예) /서울특별시/마포구/상암동/초등/
+  레벨5: /도/시/동/학년/키워드/        예) /서울특별시/마포구/상암동/초등/초등 수학학원/
+
+  학년 4종: 초등 / 중등 / 고등 / 메인학원
+
+  레벨 감지 코드:
+    relative = path.relative_to(ROOT)   # 새로운학원/ 기준
+    level = len(relative.parts) - 1     # index.html 제외한 폴더 수
+
+
+================================================================
+[ 3. 파일 경로 전체 맵 ]
+================================================================
+
+  C:\Users\tlsdy\OneDrive\바탕 화면\
+  ├── 새로운학원\                      ← HTML 출력 루트 (ROOT)
+  │   ├── 새거.txt                     ← 이 파일 (py 스크립트 설계서)
+  │   ├── 구조.txt                     ← 사이트 HTML 구조 상세 가이드
+  │   ├── 서치어드바이저.txt            ← 네이버 서치어드바이저 SEO 규격
+  │   ├── 학원목록.txt                 ← 436개 도/시/동 조합 (탭 구분)
+  │   ├── 학년학원키워드.txt            ← 36개 키워드 (키워드\t학년)
+  │   ├── 메인학원키워드.txt            ← 29개 키워드 (학년 컬럼 없음)
+  │   ├── gen_academy_cards.py         ← 레벨1/2 학원카드 생성 (기존, 참고용)
+  │   ├── gen_lv3.py                   ← 레벨3 학원카드 생성 (기존, 참고용)
+  │   ├── gen_lv4.py                   ← 레벨4 HTML 생성 (기존, 미완성, 참고용)
+  │   └── [도]/[시]/[동]/index.html    ← 생성될 HTML 파일들
+  │
+  └── 본문뽑기\                        ← result.html 콘텐츠 소스
+      └── [도]/result.html             ← 레벨1 본문
+          [도]/[시]/result.html        ← 레벨2 본문
+          [도]/[시]/[동]/result.html   ← 레벨3 본문
+          [도]/[시]/[동]/[학년]/result.html          ← 레벨4 본문
+          [도]/[시]/[동]/[학년]/[키워드]/result.html ← 레벨5 본문
+
+  본문뽑기 경로 예시:
+    경기도/성남시/위례동/초등/초등 수학학원/result.html
+
+
+================================================================
+[ 4. result.html 구조 ]
+================================================================
+
+  JSON 형식. 전 레벨(1~5) 동일한 구조.
+
+  {
+    "meta": "페이지 설명 (→ description / og:description / twitter:description)",
+    "section1": { "h2": "인삿말", "p": "..." },
+    "section2": { "h2": "[지역] 학군지 특징", "p": "...", "list": [...] },
+    "section3": { "h2": "[학원명] 소개", "p": "...", "list": [...], "table": [...] },
+    "section4": { "h2": "[학년] 학부모의 흔한 실수", "p": "...", "table": [...] },
+    "section5": { "h2": "해당 학원의 커리큘럼", "p": "...", "list": [...] },
+    "section6": { "h2": "종합 학습 전략", "p": "...", "list": [...] },
+    "section7": { "h2": "추천하는 학생", "p": "...", "list": [...] },
+    "section8": { "h2": "FAQ 관련", "faq": [{"q": "...", "a": "..."}] }
+  }
+
+  규칙:
+    - h2 값은 가공 없이 그대로 HTML에 삽입
+      예) "h2": "경기도 학군지 특징" → <h2 class="section-title">경기도 학군지 특징</h2>
+    - result.html 없는 경로는 스킵 (해당 index.html 미생성)
+
+
+================================================================
+[ 5. result.html 섹션별 HTML 렌더링 규칙 ]
+================================================================
+
+  section1 (인삿말) — p만:
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">[section1.h2]</h2>
+        <p class="section-desc">[section1.p]</p>
+      </div>
+    </section>
+
+  section2 / section5 / section6 / section7 — p + list:
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">[h2]</h2>
+        <p class="section-desc">[p]</p>
+        <ul class="content-list">
+          <li>[list 항목]</li>
+          ...
+        </ul>
+      </div>
+    </section>
+
+  section3 — p + list + 정보 테이블 (2열):
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">[h2]</h2>
+        <p class="section-desc">[p]</p>
+        <ul class="content-list">
+          <li>[list 항목]</li>
+        </ul>
+        <table class="info-table">
+          <tbody>
+            <tr><th scope="row">학원명</th><td>[내용]</td></tr>
+            <tr><th scope="row">수강료</th><td>[내용]</td></tr>
+            <tr><th scope="row">주소</th><td>[내용]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  section4 — p + 비교 테이블 (3열):
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">[h2]</h2>
+        <p class="section-desc">[p]</p>
+        <table class="compare-table">
+          <thead>
+            <tr><th>구분</th><th>대상</th><th>내용</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>[구분]</td>
+              <td>[대상]</td>
+              <td>[내용]</td>
+            </tr>
+            ...
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  section8 (FAQ):
+    HTML:
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">[section8.h2]</h2>
+        <dl class="faq-list">
+          <dt class="faq-q">Q. [faq[i].q]</dt>
+          <dd class="faq-a">[faq[i].a]</dd>
+          ...
+        </dl>
+      </div>
+    </section>
+
+    JSON-LD: head의 FAQPage에 동일 내용 반영 (내용 반드시 일치)
+
+  시맨틱 태그 이유:
+    <ul><li>     → 크롤러가 "목록"으로 인식
+    <table><th>  → 크롤러가 "표"로 인식 (th scope로 헤더 명시)
+    <dl><dt><dd> → 크롤러가 "정의 목록/Q&A"로 인식
+
+
+================================================================
+[ 6. NEIS API — 학원카드 레벨별 호출 규칙 ]
+================================================================
+
+  API 엔드포인트: https://open.neis.go.kr/hub/acaInsTiInfo
+  인증키: 1e15a9adec0647c4a5d52cfc2c5cc9fe
+  고정 파라미터: Type=json, pIndex=1, pSize=1000
+
+  ─── 공통 필터 (전 레벨) ───────────────────────────────────────
+
+    REG_STTUS_NM = "개원"                    ← 폐원 제외
+    PSNBY_THCC_CNTNT 비어있지 않음           ← 수강료 없는 것 제외
+    LE_CRSE_LIST_NM 또는 LE_CRSE_NM에
+      수학 / 영어 / 국어 중 하나 포함
+    학원명 6글자 이상 동일 시 중복 제거
+    수학 → 영어 → 국어 순환 인터리브로 16개 추출
+
+  ─── 레벨1 (도) ────────────────────────────────────────────────
+
+    호출 파라미터:
+      ATPT_OFCDC_SC_CODE = 도 코드 (예: B10 서울특별시)
+
+    추가 필터: 없음
+    폴백: 없음 (도 전체 수집)
+
+  ─── 레벨2 (시/구) ─────────────────────────────────────────────
+
+    호출 파라미터:
+      ATPT_OFCDC_SC_CODE = 도 코드
+      ADMST_ZONE_NM = 시/구명 (예: 마포구)
+
+    추가 필터: 없음
+    폴백: 없음 (시/구 전체 수집)
+
+  ─── 레벨3 (동) ────────────────────────────────────────────────
+
+    호출 파라미터:
+      ATPT_OFCDC_SC_CODE = 도 코드
+      ADMST_ZONE_NM = 시/구명
+
+    추가 필터:
+      FA_RDNDA 괄호 안에 동명 포함된 것만
+      예) FA_RDNDA = "...(상암동, 상암 아파트)" → 상암동 ✓
+
+    폴백:
+      5개 미만이면 → 동 필터 제거하고 시/구 전체 사용
+
+  ─── 레벨4 (동/학년) ───────────────────────────────────────────
+
+    호출 파라미터:
+      ATPT_OFCDC_SC_CODE = 도 코드
+      ADMST_ZONE_NM = 시/구명
+
+    추가 필터:
+      FA_RDNDA 동 필터 (레벨3 동일)
+      + 학년별 과목 필터 (LE_CRSE_LIST_NM 또는 LE_CRSE_NM):
+
+        초등     → "초등" 포함 우선
+        중등     → "중등" 또는 "중학" 포함 우선
+        고등     → "고등" 또는 "고학" 포함 우선
+        메인학원 → 학년 필터 없음 (수학/영어/국어 전체)
+
+    폴백 순서:
+      16개 미만 → 폴백1: 학년 필터 제거 (동 필터만 유지)
+      여전히 5개 미만 → 폴백2: 동 필터도 제거 (시/구 전체 + 학년 필터)
+      여전히 5개 미만 → 폴백3: 학년 필터도 제거 (시/구 전체)
+
+  ─── 레벨5 (동/학년/키워드) ────────────────────────────────────
+
+    레벨4와 완전히 동일한 호출 규칙 적용.
+    키워드는 URL / title / description에만 사용.
+    학원카드 필터에는 키워드 미적용.
+    (동네 학원 모음 성격 — 키워드 무관하게 지역 학원 전체 표시)
+
+  ─── 레벨별 정리표 ─────────────────────────────────────────────
+
+    레벨 │ API 파라미터          │ 추가 필터            │ 폴백
+    ─────┼───────────────────────┼──────────────────────┼──────────────────────
+    1    │ 도 코드만             │ 없음                 │ 없음
+    2    │ 도 코드 + 시/구       │ 없음                 │ 없음
+    3    │ 도 코드 + 시/구       │ FA_RDNDA 동명        │ 시/구 전체
+    4    │ 도 코드 + 시/구       │ FA_RDNDA 동명 + 학년 │ 학년 제거 → 시/구 전체
+    5    │ 레벨4 동일            │ 레벨4 동일           │ 레벨4 동일
+
+  ─── 도 코드 매핑 ──────────────────────────────────────────────
+
+    B10 서울특별시   C10 부산광역시   D10 대구광역시
+    E10 인천광역시   F10 광주광역시   G10 대전광역시
+    H10 울산광역시   I10 세종시       J10 경기도
+    K10 강원도       M10 충청북도     N10 충청남도
+    P10 전북특별자치도  R10 경상북도  S10 경상남도
+    T10 제주도
+
+  ─── 학원카드 HTML 구조 ────────────────────────────────────────
+
+    <article class="academy-card">
+      <img src="[Cloudinary URL]"
+           alt="[지역명] [학원명] 내부"
+           class="academy-card-img"
+           loading="lazy"
+           width="740" height="400">
+      <div class="academy-card-body">
+        <h3 class="academy-card-name">[학원명]</h3>
+        <p class="academy-card-num">학원지정번호 [번호]</p>
+        <div class="academy-card-tags">
+          <span class="[academy-tag-math|eng|kor|etc]">[수학|영어|국어]</span>
+        </div>
+        <p class="academy-card-fee">[과정명 N,NNN원 | 과정명 N,NNN원]</p>
+        <p class="academy-card-addr">[도로명주소]</p>
+      </div>
+    </article>
+
+  ─── 학원카드 이미지 URL (Cloudinary) ─────────────────────────
+
+    베이스 이미지: public ID 1_w3frn8 ~ 16_kshki1 (16장, 매 실행마다 shuffle)
+    클라우드명: dg9uf6vh6
+
+    URL 포맷:
+      https://res.cloudinary.com/dg9uf6vh6/image/upload
+        /w_740,h_400,c_fill,q_auto,f_auto
+        /l_text:NanumGothic_28_bold:[URL인코딩된 "학원명 내부"],co_white,g_south_west,x_16,y_12,b_rgb:00000055
+        /v[버전번호]/[public_id].webp
+
+  ─── ItemList JSON-LD (학원카드 섹션 끝) ──────────────────────
+
+    ACADEMY_SECTION_END 마커 바로 앞에 삽입:
+
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "[지역명] 인기학원 모음",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "EducationalOrganization",
+            "name": "[학원명]",
+            "identifier": "[학원지정번호]",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "[도로명주소]",
+              "addressLocality": "[지역명]",
+              "addressCountry": "KR"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "수강료",
+              "itemListElement": [
+                { "@type": "Offer", "name": "[과정명]", "price": "[금액]", "priceCurrency": "KRW" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+
+    마커:
+      <!-- ACADEMY_SECTION_START -->
+      ...카드 16개 + ItemList JSON-LD...
+      <!-- ACADEMY_SECTION_END -->
+
+
+================================================================
+[ 7. 페이지 섹션 순서 ]
+================================================================
+
+  표기 규칙:
+    x   = h2 없는 시각 섹션 (사진 배너 등)
+    숫자 = h2 섹션
+    h3  = 하위 탐색 섹션 (h3 태그, 페이지 맨 아래)
+
+  모든 사진 → Cloudinary 사용, 페이지마다 URL 다르게 (텍스트 오버레이)
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  레벨 1 ~ 4 공통 구조
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  순서 │ 태그 │ 내용                          │ 출처
+  ─────┼──────┼───────────────────────────────┼───────────────────────────
+   x   │ -    │ 슬라이더 (1번학원사진 7장)     │ academy/1학원정면 ~ academy/7학교별기출
+   H1  │ h1   │ [지역키워드] 영어·수학·국어 학원 [타이틀.txt값] │ 타이틀과 완전 동일
+   x   │ -    │ 고정 상세페이지 (이미지 17장)  │ webp/1합격법 ~ webp/17상담예약 순차 배치
+   1   │ h2   │ section1.h2 (인삿말)          │ result.html
+   2   │ h2   │ 학원 위치 사진                │ 학원목록.txt 5번째 컬럼 → location/ ID 매칭
+   3   │ h2   │ section2.h2 (학군지 특징)     │ result.html
+   4   │ h2   │ section3.h2 (학원 소개)       │ result.html
+   5   │ h2   │ section4.h2 (학부모 실수)     │ result.html
+   6   │ h2   │ section5.h2 (커리큘럼)        │ result.html
+   7   │ h2   │ 해당 지역 인기학원 모음       │ NEIS API → 학원카드 16개
+   8   │ h2   │ section6.h2 (학습 전략)       │ result.html
+   9   │ h2   │ section7.h2 (추천 학생)       │ result.html
+  10   │ h2   │ section8.h2 (FAQ)             │ result.html
+   x   │ h3   │ [지역키워드] 지역별 안내      │ 경로 기반 자동 생성 (region-list)
+   x   │ h3   │ 상위 지역 학원 목록           │ 자동 생성 (back-nav)
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  레벨 5 구조 (최종 키워드 페이지)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  순서 │ 태그 │ 내용                              │ 출처
+  ─────┼──────┼───────────────────────────────────┼───────────────────────────
+   x   │ -    │ 슬라이더 (1번학원사진 7장)         │ academy/1학원정면 ~ academy/7학교별기출
+   H1  │ h1   │ [지역키워드] [학원키워드] [타이틀.txt값] │ 타이틀과 완전 동일
+   x   │ -    │ 고정 상세페이지 (이미지 17장)      │ webp/1합격법 ~ webp/17상담예약 순차 배치
+   1   │ h2   │ section1.h2 (인삿말)              │ result.html
+   2   │ h2   │ 학원 위치 사진                    │ 학원목록.txt 5번째 컬럼 → location/ ID 매칭
+   3   │ h2   │ section2.h2 (학군지 특징)         │ result.html
+   4   │ h2   │ section3.h2 (학원 소개)           │ result.html
+   5   │ h2   │ section4.h2 (학부모 실수)         │ result.html
+   6   │ h2   │ section5.h2 (커리큘럼)            │ result.html
+   7   │ h2   │ 해당 지역 인기학원 모음           │ NEIS API → 학원카드 16개
+   8   │ h2   │ section6.h2 (학습 전략)           │ result.html
+   9   │ h2   │ section7.h2 (추천 학생)           │ result.html
+  10   │ h2   │ section8.h2 (FAQ)                 │ result.html
+   x   │ h3   │ 상위 지역 학원 목록               │ 자동 생성 (back-nav, 5단계)
+
+  레벨5와 레벨1~4의 차이:
+    - H1: [지역키워드] 학원 소개 → [지역키워드+키워드] 소개
+    - region-list 없음 (최종 페이지, 하위 없음)
+    - back-nav 5단계: [동][학년] → [동] → [시] → [도] → 전국
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  미정 섹션 스펙 (별도 제공 후 추가)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ① x — 상단 지역 사진 배너
+      레벨1~4: 텍스트 "[지역키워드] 학원 사진"
+      레벨5:   텍스트 "[지역키워드+키워드] 학원 사진"
+      → Cloudinary URL 구성 방식, 이미지 장수, alt 규칙 미정
+
+  ② x — 고정 상세페이지 (이미지 17장)
+      → 전 페이지 동일 이미지 17장이지만 Cloudinary 텍스트 오버레이로 URL 다르게
+      → 배치 방식, alt 규칙 미정
+
+  ③ H2-2 — 학원 위치 사진 (확정)
+     → 아래 [ 13. 학원 위치 사진 규칙 ] 참고
+
+
+================================================================
+[ 8. HEAD 생성 규칙 ]
+================================================================
+
+  [A-1] 기본 메타
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  [A-2] SEO 핵심 메타
+    <title>[타이틀 규칙 적용값]</title>
+      레벨1~4: [지역키워드] 영어·수학·국어 학원 [타이틀.txt 1개]
+        예) 서울특별시 영어·수학·국어 학원 성적 수직 상승
+        예) 마포구 영어·수학·국어 학원 압도적 관리
+        예) 상암동 영어·수학·국어 학원 밀착 피드백
+        예) 상암동 초등 영어·수학·국어 학원 압도적 관리
+      레벨5: [지역키워드] [학원키워드] [타이틀.txt 1개]
+        예) 상암동 초등 수학학원 성적 수직 상승
+        예) 상암동 중등 영어학원 압도적 관리
+
+      ※ | 에너지+ 등 브랜드 suffix 없음
+      ※ 타이틀.txt 283개 중 페이지마다 1개 랜덤 선택
+    <meta name="description" content="result.html 'meta' 필드">
+    <meta name="keywords" content="[지역] [키워드] 조합 6~8개">
+    <meta name="author" content="동네학원 찾기 - 에너지+">
+    <meta name="robots" content="index, follow">
+    <meta name="naver-site-verification" content="6c8552333b0e48ee6249eeecfdd0e6c5c62384eb">
+
+  [A-3] OG 태그
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="[title과 동일]">
+    <meta property="og:description" content="result.html 'meta' 필드">
+    <meta property="og:url" content="https://energyplus.kr/[현재경로]/">
+    <meta property="og:site_name" content="동네학원 찾기 - 에너지+">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:image" content="[Cloudinary 히어로 이미지 URL]">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+  [A-4] Twitter 태그
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="[title과 동일]">
+    <meta name="twitter:description" content="result.html 'meta' 필드">
+    <meta name="twitter:image" content="[og:image와 동일]">
+
+  [A-5] 브랜드 / Canonical
+    <meta name="theme-color" content="#F97316">
+    <link rel="canonical" href="https://energyplus.kr/[현재경로]/">
+
+  [A-6] Favicon — 반드시 절대경로
+    <link rel="icon" href="https://energyplus.kr/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://energyplus.kr/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://energyplus.kr/images/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="https://energyplus.kr/images/로고.jpg">
+
+  [A-7] Google Fonts 비동기 로드
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap"></noscript>
+
+  [A-8] CSS preload (렌더링 차단 없음)
+    <link rel="preload" href="/css/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/style.css"></noscript>
+
+  [A-9] JSON-LD @graph 포함 타입:
+    - Article          → 경로 기반 자동 생성
+    - BreadcrumbList   → 경로 기반 자동 생성 (레벨별 단계 다름)
+    - FAQPage          → result.html section8.faq 로 생성
+                         (HTML dl/dt/dd 내용과 반드시 일치)
+    - Person           → 고정값
+    - Service          → 고정값
+    - LocalBusiness    → 고정값
+
+  BreadcrumbList 단계:
+    레벨1: 홈 → 도                              (2단계)
+    레벨2: 홈 → 도 → 시                         (3단계)
+    레벨3: 홈 → 도 → 시 → 동                    (4단계)
+    레벨4: 홈 → 도 → 시 → 동 → 학년            (5단계)
+    레벨5: 홈 → 도 → 시 → 동 → 학년 → 키워드   (6단계)
+
+  Cloudinary 히어로 이미지 URL (og:image, 네이버 썸네일용 — 페이지에 미표시):
+    https://res.cloudinary.com/dg9uf6vh6/image/upload
+      /w_800,q_auto,f_auto
+      /l_text:NanumGothic_45_bold:[URL인코딩된텍스트],co_white,g_south_west,x_30,y_30,b_rgb:00000066
+      /academy/2일대일수업.webp
+
+    ※ 슬라이더(1번학원사진)가 페이지 상단 시각 섹션 역할을 대신하므로
+       별도 hero <section> 없음. og:image만 설정.
+
+    텍스트 규칙:
+      레벨1: [도줄임] 학원 실제내부           예) 서울 학원 실제내부
+      레벨2: [도줄임] [시] 학원 실제내부      예) 서울 마포구 학원 실제내부
+      레벨3: [도줄임] [동] 학원 실제내부      예) 서울 상암동 학원 실제내부
+      레벨4: [동] [학년] 학원 실제내부        예) 상암동 초등 학원 실제내부
+      레벨5: [동] [키워드] 학원 실제내부      예) 상암동 초등 수학학원 실제내부
+
+
+================================================================
+[ 9. BODY 고정 구조 ]
+================================================================
+
+  [B-1] <header> — 고정
+    로고: 동네학원 찾기 - 에너지+
+    nav: 전국 / 지역별 / 학원찾기
+
+  [B-2] <section class="hero"> — 경로 기반 생성
+    H1: 페이지당 반드시 1개 (히어로 영역)
+    히어로 이미지: fetchpriority="high", aspect-ratio 유지
+
+  [B-3] <main><article> — 섹션 순서는 [ 7. H2 순서 ] 참고
+
+  [B-4] <footer> — 고정
+    슬로건, 대표번호, 이메일
+
+  [B-5] WCS 스크립트 (defer 추가)
+    <script type="text/javascript" src="//wcs.pstatic.net/wcslog.js" defer></script>
+    <script type="text/javascript">
+    if(!wcs_add) var wcs_add = {};
+    wcs_add["wa"] = "1424ba4d85077d";
+    if(window.wcs) { wcs_do(); }
+    </script>
+
+
+================================================================
+[ 10. back-nav 레벨별 링크 ]
+================================================================
+
+  레벨1:
+    <a href="/">전국학원 목록 보기</a>
+
+  레벨2:
+    <a href="/[도]/">[도] 학원 목록</a>
+    <a href="/">전국학원 목록 보기</a>
+
+  레벨3:
+    <a href="/[도]/[시]/">[시] 학원 목록</a>
+    <a href="/[도]/">[도] 학원 목록</a>
+    <a href="/">전국학원 목록 보기</a>
+
+  레벨4:
+    <a href="/[도]/[시]/[동]/">[동] 학원 목록</a>
+    <a href="/[도]/[시]/">[시] 학원 목록</a>
+    <a href="/[도]/">[도] 학원 목록</a>
+    <a href="/">전국학원 목록 보기</a>
+
+  레벨5:
+    <a href="/[도]/[시]/[동]/[학년]/">[동] [학년] 학원 목록</a>
+    <a href="/[도]/[시]/[동]/">[동] 학원 목록</a>
+    <a href="/[도]/[시]/">[시] 학원 목록</a>
+    <a href="/[도]/">[도] 학원 목록</a>
+    <a href="/">전국학원 목록 보기</a>
+
+  공통 규칙:
+    컨테이너: <nav class="back-nav" aria-label="상위 지역 탐색">
+    링크: <a href> 직접 사용 (<li> 래퍼 없음)
+    JS onclick 절대 금지
+    h2: "상위 지역 학원 목록" 고정
+
+
+================================================================
+[ 11. CSS — 신규 클래스 추가 필요 (style.css) ]
+================================================================
+
+  스크립트 실행 전 style.css에 아래 3개 클래스 추가 필수.
+  없으면 새 HTML에서 스타일 없이 날것으로 출력됨.
+
+  .content-list   → section2,5,6,7의 <ul> 스타일
+  .info-table     → section3의 학원 정보 2열 테이블
+  .compare-table  → section4의 3열 비교 테이블
+
+
+================================================================
+[ 12. 미결 사항 (추후 결정) ]
+================================================================
+
+  아래 3개 섹션 스펙 수령 후 gen_all.py 작성 즉시 가능.
+
+  ① 상단 사진 배너 (x 섹션, h2 없음) → 확정
+     - 이미지: C:\Users\tlsdy\OneDrive\바탕 화면\에너지+\1번학원사진\webp\ (7장)
+     - 파일명: 1학원정면.webp ~ 7학교별기출.webp (번호 순서대로)
+     - 배치: 슬라이더 (좌우 넘기기)
+     - alt: 파일명에서 앞 번호 제거 (예: "1학원정면" → alt="학원정면")
+     - Cloudinary 업로드 후 public_id 추가 예정 (폴더: academy/)
+
+  ② 고정 상세페이지 — 이미지 17장 (x 섹션, h2 없음) → 확정
+     - 배치: 번호 순서대로 세로 순차 배치 (네이버 블로그형, 위→아래)
+     - Cloudinary public ID 목록 17개 (업로드 완료):
+
+     Cloudinary public_id 목록 (cloud: dg9uf6vh6, 폴더: webp/):
+       webp/1합격법       → alt="합격법"
+       webp/2선생님소개   → alt="선생님소개"
+       webp/3일대일지도   → alt="일대일지도"
+       webp/4커리큘럼     → alt="커리큘럼"
+       webp/5타학원차이점 → alt="타학원차이점"
+       webp/6성적향상사례 → alt="성적향상사례"
+       webp/7플래너사진   → alt="플래너사진"
+       webp/8소통법       → alt="소통법"
+       webp/9관리법       → alt="관리법"
+       webp/10공부공간    → alt="공부공간"
+       webp/11수업방식    → alt="수업방식"
+       webp/12학습코칭    → alt="학습코칭"
+       webp/13국어        → alt="국어"
+       webp/14영어        → alt="영어"
+       webp/15수학        → alt="수학"
+       webp/16비용        → alt="비용"
+       webp/17상담예약    → alt="상담예약"
+
+     URL 포맷:
+       https://res.cloudinary.com/dg9uf6vh6/image/upload/[변환옵션]/webp/[파일명].webp
+
+     alt 추출 코드: re.sub(r'^\d+', '', filename_without_ext)
+
+  ③ 학원 위치 사진 (H2-2) → 확정. [ 13. 학원 위치 사진 규칙 ] 참고
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ 15. all_card.py — 학원카드 모듈 ]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 파일 위치
+  새로운학원/all_card.py
+
+■ gen_all.py에서 사용법
+  from all_card import get_academies, make_section
+
+  # 학원 rows 가져오기
+  rows = get_academies(level, code, si, dong, grade)
+
+  # 학원카드 섹션 HTML 생성
+  html = make_section(rows, area_name)
+
+■ get_academies() 파라미터
+  level : 1~5
+  code  : 도 코드 (예: 'J10')
+  si    : 시/구명 (레벨1은 None)
+  dong  : 동명 (레벨1~2는 None)
+  grade : '초등'/'중등'/'고등'/'메인학원' (레벨1~3은 None)
+  count : 추출 개수 (기본 16)
+
+■ 레벨별 내부 동작
+  레벨1 → _fetch_rows(code, None), 필터 없음
+  레벨2 → _fetch_rows(code, si),   필터 없음
+  레벨3 → 동 필터, 5개 미만 → 동 제거 폴백
+  레벨4 → 동+학년 필터, 3단계 폴백:
+           1) 동O 학년O  (16개 이상이면 종료)
+           2) 동O 학년X
+           3) 동X 학년O
+           4) 동X 학년X
+  레벨5 → 레벨4와 동일
+
+■ API 캐시
+  _api_cache: dict = {}   # (code, si) → rows
+  같은 시/구 여러 동 처리 시 API 중복 호출 방지
+
+■ make_section() 반환값
+  <!-- ACADEMY_SECTION_START --> ~ <!-- ACADEMY_SECTION_END -->
+  학원카드 16개 article + ItemList JSON-LD 포함
+
+■ 학원카드 이미지 오버레이 텍스트
+  "{area_name} {academy_name} 내부"
+  예) "마두동 한솔수학학원 내부"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ 14. Cloudinary 이미지 URL — 텍스트 오버레이 규칙 ]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 기본 원칙
+  페이지에 들어가는 모든 이미지는 Cloudinary 텍스트 오버레이를 사용해
+  URL을 페이지마다 다르게 만든다.
+
+  오버레이 텍스트 = [지역키워드] + (레벨5만: [학원키워드] +) [alt값]
+
+■ 레벨1~4 URL 포맷
+  텍스트: [지역키워드] [alt값]
+  예) 레벨3 상암동 페이지, 슬라이더 1번 이미지:
+    텍스트 = "상암동 학원정면"
+    URL = https://res.cloudinary.com/dg9uf6vh6/image/upload
+            /w_800,q_auto,f_auto
+            /l_text:NanumGothic_45_bold:상암동%20학원정면,co_white,g_south_west,x_30,y_30,b_rgb:00000066
+            /academy/1학원정면.webp
+
+■ 레벨5 URL 포맷
+  텍스트: [지역키워드] [학원키워드] [alt값]
+  학원키워드 = 학년학원키워드.txt 또는 메인학원키워드.txt의 키워드
+  예) 레벨5 상암동/초등/초등 수학학원 페이지, 상세페이지 1번 이미지:
+    텍스트 = "상암동 초등 수학학원 합격법"
+    URL = https://res.cloudinary.com/dg9uf6vh6/image/upload
+            /w_800,q_auto,f_auto
+            /l_text:NanumGothic_45_bold:상암동%20초등%20수학학원%20합격법,co_white,g_south_west,x_30,y_30,b_rgb:00000066
+            /webp/1합격법.webp
+
+■ 적용 대상 이미지 전체
+  이미지                  │ public_id 기준  │ alt값 기준
+  ────────────────────────┼─────────────────┼──────────────────────────
+  슬라이더 7장            │ academy/        │ 파일명 앞 번호 제거
+                          │                 │ (1학원정면 → 학원정면)
+  고정 상세페이지 17장    │ webp/           │ 파일명 앞 번호 제거
+                          │                 │ (1합격법 → 합격법)
+  위치사진                │ location/       │ 위치사진1, 위치사진2 ...
+  학원카드 이미지 16장    │ 1_w3frn8 등     │ [지역명] [학원명] 내부
+  og:image                │ academy/2일대일수업 │ (썸네일용, 페이지 미표시)
+
+■ 코드 처리 방식
+  import urllib.parse
+  text = f"{지역키워드} {alt값}"              # 레벨1~4
+  text = f"{지역키워드} {학원키워드} {alt값}" # 레벨5
+  encoded = urllib.parse.quote(text, safe='')
+  overlay = f"l_text:NanumGothic_45_bold:{encoded},co_white,g_south_west,x_30,y_30,b_rgb:00000066"
+  url = f"https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,q_auto,f_auto/{overlay}/{public_id}.webp"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ 13. 학원 위치 사진 규칙 ]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 원본 출처
+  - 원본: C:\Users\tlsdy\OneDrive\바탕 화면\학원위치\*.png (204장)
+  - WebP 변환: 학원위치\webp\*.webp (quality=70)
+  - Cloudinary 업로드: cloud=dg9uf6vh6, 폴더=location/
+  - 매칭 키: 학원목록.txt 5번째 컬럼 (점 단위)
+
+■ Cloudinary URL 포맷
+  https://res.cloudinary.com/dg9uf6vh6/image/upload/[변환옵션]/location/[public_id].webp
+  예시: https://res.cloudinary.com/dg9uf6vh6/image/upload/q_auto/location/노원구 하계동.webp
+
+■ 레벨별 위치사진 사용 규칙
+
+  레벨1 (도 단위)
+    → 위치사진 없음 (섹션 H2-2 자체 미출력)
+
+  레벨2 (시/구 단위)
+    → 해당 시/구에 속하는 점들의 5번째 컬럼 값 전부 수집
+    → 수집된 public_id 개수만큼 <img> 태그 출력
+    → alt값: 위치사진1, 위치사진2, 위치사진3 ... (순서대로 n 증가)
+    예시) 노원구 페이지 → 노원구 하계동 1장만 존재 → 위치사진1 1장
+    예시) 일산 페이지 → 일산 덕이점, 일산 마두점, 일산 삼송점 ... → 위치사진1~N 여러 장
+
+  레벨3 (동 단위)
+    → 해당 점의 5번째 컬럼 값 1개 → location/[값] 1장
+    → alt값: 위치사진1
+
+  레벨4 (학년 단위)
+    → 레벨3과 동일: 5번째 컬럼 값 1개 → 1장, alt=위치사진1
+
+  레벨5 (키워드 단위)
+    → 레벨3과 동일: 5번째 컬럼 값 1개 → 1장, alt=위치사진1
+
+■ 레벨2 매칭 방법 (코드 로직)
+  1. 학원목록.txt에서 레벨2(시/구)가 일치하는 모든 행 수집
+  2. 각 행의 5번째 컬럼 값 → public_id 리스트 생성
+  3. location_ids.txt에서 해당 public_id 존재 여부 확인
+  4. 존재하는 것만 순서대로 <img> 출력, alt=위치사진{n}
+
+■ Cloudinary public_id 전체 목록 (204개, cloud: dg9uf6vh6)
+  키(5번째 컬럼)              public_id
+  ─────────────────────────────────────────────────────
+  가경                        location/가경
+  가좌점                      location/가좌점
+  강동구 명일동               location/강동구 명일동
+  강릉 옥천동                 location/강릉 옥천동
+  강릉교동                    location/강릉교동
+  강북 성북 돈암동            location/강북 성북 돈암동
+  강북 성북 삼각산동          location/강북 성북 삼각산동
+  강북 성북 종암점            location/강북 성북 종암점
+  강서구 내발산동             location/강서구 내발산동
+  강서구 목동                 location/강서구 목동
+  강서구 신방화               location/강서구 신방화
+  강서구 염창동               location/강서구 염창동
+  거제 수월동                 location/거제 수월동
+  경기광주 탄벌               location/경기광주 탄벌
+  경산 정평동                 location/경산 정평동
+  광명 광명점                 location/광명 광명점
+  광명 소하점                 location/광명 소하점
+  광명 철산점                 location/광명 철산점
+  광주 상무지구 신창동        location/광주 상무지구 신창동
+  광주 선운지구 선운점        location/광주 선운지구 선운점
+  광주 수완동                 location/광주 수완동
+  광주 신용동                 location/광주 신용동
+  광주 진월동                 location/광주 진월동
+  광주 첨단 월계동            location/광주 첨단 월계동
+  광주 치평동                 location/광주 치평동
+  광진구 광장점               location/광진구 광장점
+  구로 금천점                 location/구로 금천점
+  구로 신도림점               location/구로 신도림점
+  구리 갈매동                 location/구리 갈매동
+  구리 인창동                 location/구리 인창동
+  구미 옥계                   location/구미 옥계
+  구월                        location/구월
+  김포 사우동                 location/김포 사우동
+  김포 운양동                 location/김포 운양동
+  김포 장기동                 location/김포 장기동
+  김포 풍무동                 location/김포 풍무동
+  남양주 다산                 location/남양주 다산
+  남양주 다산도농             location/남양주 다산도농
+  남양주 다산지금             location/남양주 다산지금
+  남양주 별내 별가람점        location/남양주 별내 별가람점
+  남양주 별내 퇴계원점        location/남양주 별내 퇴계원점
+  남양주 별내                 location/남양주 별내
+  남양주 진접읍               location/남양주 진접읍
+  남양주 평내동               location/남양주 평내동
+  남양주 호평동               location/남양주 호평동
+  노원구 하계동               location/노원구 하계동
+  당진 읍내동                 location/당진 읍내동
+  대구 달서구 월성동          location/대구 달서구 월성동
+  대구 달서구 이곡동          location/대구 달서구 이곡동
+  대구 달서구 장기동          location/대구 달서구 장기동
+  대구 도남점                 location/대구 도남점
+  대구 만촌동                 location/대구 만촌동
+  대구 북구 복현점            location/대구 북구 복현점
+  대구 수성구 수성2가점       location/대구 수성구 수성2가점
+  대구 수성구 알파시티점      location/대구 수성구 알파시티점
+  대구 율하                   location/대구 율하
+  대구 중구 대구역점          location/대구 중구 대구역점
+  대구 칠곡                   location/대구 칠곡
+  대구 침산동                 location/대구 침산동
+  대전 관저                   location/대전 관저
+  대전 관평                   location/대전 관평
+  대전 도안                   location/대전 도안
+  대전 둔산                   location/대전 둔산
+  대전 반석                   location/대전 반석
+  대전 송촌동                 location/대전 송촌동
+  대전 지족                   location/대전 지족
+  대전 태평동                 location/대전 태평동
+  돈암 동소문                 location/돈암 동소문
+  동대문 제기동               location/동대문 제기동
+  마포2호점 (2)               location/마포2호점 (2)
+  마포구 상암동               location/마포구 상암동
+  마포구 염리동               location/마포구 염리동
+  명지대                      location/명지대
+  반여동                      location/반여동
+  반월당                      location/반월당
+  배곧                        location/배곧
+  백현                        location/백현
+  별내중앙                    location/별내중앙
+  봉담                        location/봉담
+  부산 동래 사직동            location/부산 동래 사직동
+  부산 동래                   location/부산 동래
+  부산 센텀                   location/부산 센텀
+  부산 해운대 좌동            location/부산 해운대 좌동
+  부산 화명                   location/부산 화명
+  부천 범박                   location/부천 범박
+  부천 상동 반달점            location/부천 상동 반달점
+  부천 상동                   location/부천 상동
+  부천 신중동                 location/부천 신중동
+  부천 옥길                   location/부천 옥길
+  부천 중동                   location/부천 중동
+  분당 미금 금곡동            location/분당 미금 금곡동
+  분당 야탑 여수동            location/분당 야탑 여수동
+  분당 이매동                 location/분당 이매동
+  사동                        location/사동
+  산본                        location/산본
+  상담                        location/상담
+  성남 단대동                 location/성남 단대동
+  성남 수진동                 location/성남 수진동
+  세종 새롬동                 location/세종 새롬동
+  수원 금곡동                 location/수원 금곡동
+  수원 천천동                 location/수원 천천동
+  수원 호매실                 location/수원 호매실
+  시흥 목감                   location/시흥 목감
+  시흥 은계 대야점            location/시흥 은계 대야점
+  시흥 장곡동                 location/시흥 장곡동
+  신봉                        location/신봉
+  안산 고잔동                 location/안산 고잔동
+  안양 비산동                 location/안양 비산동
+  양주 옥정동                 location/양주 옥정동
+  영등포 당산점               location/영등포 당산점
+  영통 망포동                 location/영통 망포동
+  영통 매탄동                 location/영통 매탄동
+  영통 영덕동                 location/영통 영덕동
+  영통 영통동                 location/영통 영통동
+  오산 동탄호수               location/오산 동탄호수
+  오산 세교점                 location/오산 세교점
+  오산 시청점                 location/오산 시청점
+  오산 오산대역               location/오산 오산대역
+  오산                        location/오산
+  옥길스타                    location/옥길스타
+  용산                        location/용산
+  용인 기흥구청               location/용인 기흥구청
+  용인 동백동                 location/용인 동백동
+  용인 보라동                 location/용인 보라동
+  용인 상현동                 location/용인 상현동
+  용인 수지                   location/용인 수지
+  용인 죽전                   location/용인 죽전
+  운정중앙                    location/운정중앙
+  울산 남외동                 location/울산 남외동
+  울산 복산동 반구동          location/울산 복산동 반구동
+  울산 삼산동                 location/울산 삼산동
+  울산 송정동                 location/울산 송정동
+  원주 단구동                 location/원주 단구동
+  원주 무실동                 location/원주 무실동
+  원주 혁신 반곡동            location/원주 혁신 반곡동
+  위례 송파점                 location/위례 송파점
+  위례 창곡동                 location/위례 창곡동
+  위례 창곡점                 location/위례 창곡점
+  은평구 구산동               location/은평구 구산동
+  은평구 진관동               location/은평구 진관동
+  의정부 신곡동               location/의정부 신곡동
+  이시아                      location/이시아
+  이천 갈산동                 location/이천 갈산동
+  이천 부발읍                 location/이천 부발읍
+  이천 증포동                 location/이천 증포동
+  인천 논현동                 location/인천 논현동
+  인천 동춘동                 location/인천 동춘동
+  인천 루원시티               location/인천 루원시티
+  인천 부평동                 location/인천 부평동
+  인천 삼산동                 location/인천 삼산동
+  인천 송도 웰카운티          location/인천 송도 웰카운티
+  인천 송도                   location/인천 송도
+  인천 청라                   location/인천 청라
+  일산 덕이점                 location/일산 덕이점
+  일산 마두점                 location/일산 마두점
+  일산 삼송점                 location/일산 삼송점
+  일산 원당점                 location/일산 원당점
+  일산 원흥점                 location/일산 원흥점
+  일산 주엽점                 location/일산 주엽점
+  일산 탄현점                 location/일산 탄현점
+  일산 풍동점                 location/일산 풍동점
+  일산 행신동                 location/일산 행신동
+  일산 화정점                 location/일산 화정점
+  일산 후곡점                 location/일산 후곡점
+  전주 서신점                 location/전주 서신점
+  전주 송천점                 location/전주 송천점
+  전주혁신                    location/전주혁신
+  제주 노형동                 location/제주 노형동
+  중산                        location/중산
+  진천                        location/진천
+  창원 상남동                 location/창원 상남동
+  창원 진해 석동              location/창원 진해 석동
+  천안 두정동                 location/천안 두정동
+  천안 불당동                 location/천안 불당동
+  천안 신방동                 location/천안 신방동
+  천안 쌍용동                 location/천안 쌍용동
+  청주 개신점                 location/청주 개신점
+  청주 복대점                 location/청주 복대점
+  청주 산남점                 location/청주 산남점
+  청주 세종                   location/청주 세종
+  춘천 석사동                 location/춘천 석사동
+  춘천 후평동                 location/춘천 후평동
+  충주 칠금동                 location/충주 칠금동
+  탕정                        location/탕정
+  파주 교하점                 location/파주 교하점
+  파주 금촌동 금릉점          location/파주 금촌동 금릉점
+  파주 산내점                 location/파주 산내점
+  파주 운정점                 location/파주 운정점
+  파주 운정호수점             location/파주 운정호수점
+  평택 비전동                 location/평택 비전동
+  평택 이충동                 location/평택 이충동
+  포항 두호동                 location/포항 두호동
+  포항 양덕동                 location/포항 양덕동
+  하남 망월동 미사점          location/하남 망월동 미사점
+  하남 풍산동 센트럴점        location/하남 풍산동 센트럴점
+  하남 풍산점                 location/하남 풍산점
+  화성 동탄목동               location/화성 동탄목동
+  화성 동탄호수점             location/화성 동탄호수점
+  화성 반송점                 location/화성 반송점
+  화성 병점                   location/화성 병점
+  화성 병점태안               location/화성 병점태안
+  화성 영천점                 location/화성 영천점
+  화성 향남점                 location/화성 향남점
+  흥덕                        location/흥덕

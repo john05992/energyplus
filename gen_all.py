@@ -708,7 +708,7 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     page_key = f'{do}/{si}/{dong}/{grade}/{kw}'
     tv       = pick_title(titles, page_key)
     title    = build_title(level, do, si, dong, grade, kw, tv)
-    desc     = data.get('meta', '')
+    desc     = data.get('meta', '') + ' 문의: 010-3952-5815'
     kw_meta  = build_kw_meta(level, do, si, dong, grade, kw)
     akw      = get_area_kw(level, do, si, dong, grade)
 
@@ -735,12 +735,18 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     area_name = dong or si or DO_SHORT.get(do, do)
     card_html = make_card_section(rows, area_name)
 
+    # 레벨별 고정 H2
+    h2_s1 = f'{dong} {kw}' if level == 5 else f'{akw} 학원'
+    h2_s5 = f'{dong} {kw} 커리큘럼' if level == 5 else f'{akw} 학원 커리큘럼'
+
     # result.html 섹션별 렌더링
-    s1 = render_section1(data.get('section1', {}))
+    s1_data = {**data.get('section1', {}), 'h2': h2_s1}
+    s1 = render_section1(s1_data)
     s2 = render_list_section(data.get('section2', {}))
     s3 = render_section3(data.get('section3', {}))
     s4 = render_section4(data.get('section4', {}))
-    s5 = render_list_section(data.get('section5', {}))
+    s5_data = {**data.get('section5', {}), 'h2': h2_s5}
+    s5 = render_list_section(s5_data)
     s6 = render_list_section(data.get('section6', {}))
     s7 = render_list_section(data.get('section7', {}))
     s8 = render_section8(data.get('section8', {}))

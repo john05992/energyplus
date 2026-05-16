@@ -174,15 +174,15 @@ def load_si_dong_map() -> dict:
 # Cloudinary URL 생성
 # ══════════════════════════════════════════════════════════════════════
 
-def cld_url(public_id: str, text: str, w: int = 800, h: int = 0, crop: str = '') -> str:
-    enc = urllib.parse.quote(text, safe='')
-    size = f'w_{w}'
-    if h:
-        size += f',h_{h}'
-    if crop:
-        size += f',c_{crop}'
+def cld_url(public_id: str, text: str, w: int = 800, h: int = 0,
+            crop: str = '', angle: int = 0) -> str:
+    enc    = urllib.parse.quote(text, safe='')
+    size   = f'w_{w}'
+    if h:     size += f',h_{h}'
+    if crop:  size += f',c_{crop}'
+    prefix = f'a_{angle}/' if angle else ''
     return (
-        f'{CLOUD}/{size},q_auto,f_auto'
+        f'{CLOUD}/{prefix}{size},q_auto,f_auto'
         f'/l_text:NanumGothic_10:{enc},'
         f'co_white,o_25,g_south_west,x_10,y_6'
         f'/{public_id}.webp'
@@ -245,27 +245,29 @@ def build_kw_meta(level: int, do: str, si: str, dong: str, grade: str, kw: str) 
 def first_slide_url(akw: str, level: int, kw: str = '') -> str:
     pid, alt_base = SLIDER_IMGS[0]
     text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-    return cld_url(pid, text, w=800, h=600, crop='fill')
+    return cld_url(pid, text, w=800, h=800, crop='fill', angle=90)
 
 
 def make_hero(akw: str, level: int, kw: str, title: str) -> str:
     """히어로 섹션: 슬라이더(우측) + H1(좌측) 통합."""
     slides = []
     for i, (pid, alt_base) in enumerate(SLIDER_IMGS):
-        text = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
-        src  = cld_url(pid, text, w=800, h=600, crop='fill')
+        text  = f'{akw} {kw} {alt_base}' if level == 5 and kw else f'{akw} {alt_base}'
+        # 1번 이미지(학원정면)는 90도 회전 보정
+        rot   = 90 if i == 0 else 0
+        src   = cld_url(pid, text, w=800, h=800, crop='fill', angle=rot)
         if i == 0:
             attrs = 'loading="eager" fetchpriority="high" decoding="sync"'
         else:
             attrs = 'loading="lazy" decoding="async"'
         slides.append(
             f'          <div class="slide">'
-            f'<img src="{src}" alt="{text}" {attrs} width="800" height="600">'
+            f'<img src="{src}" alt="{text}" {attrs} width="800" height="800">'
             f'</div>'
         )
     slides_html = '\n'.join(slides)
-    n = len(SLIDER_IMGS)
-    dots_html   = '\n'.join(
+    n         = len(SLIDER_IMGS)
+    dots_html = '\n'.join(
         f'          <span class="sl-dot{"  sl-dot-active" if i == 0 else ""}"></span>'
         for i in range(n)
     )
@@ -280,6 +282,8 @@ def make_hero(akw: str, level: int, kw: str, title: str) -> str:
         '          <div class="sl-track">\n'
         f'{slides_html}\n'
         '          </div>\n'
+        '          <button class="sl-arrow sl-prev" aria-label="이전 사진">&#8249;</button>\n'
+        '          <button class="sl-arrow sl-next" aria-label="다음 사진">&#8250;</button>\n'
         '          <div class="sl-dots">\n'
         f'{dots_html}\n'
         '          </div>\n'
@@ -625,52 +629,41 @@ def make_head(title: str, desc: str, canon: str, og_img: str, kw_meta: str,
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap"></noscript>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-  /* ── 히어로 ─────────────────────────────── */
-  .hero{{background:#1a1a2e;overflow:hidden}}
-  .hero-inner{{display:flex;flex-direction:row-reverse;align-items:stretch;max-width:1200px;margin:0 auto;min-height:420px}}
-  .hero-img-wrap{{flex:0 0 48%;overflow:hidden;position:relative}}
-  .hero-text{{flex:1;padding:2.5rem 2.5rem 2.5rem 3rem;display:flex;flex-direction:column;justify-content:center;color:#fff}}
-  /* ── 슬라이더 (가로 슬라이드) ─────────── */
-  .sl-track{{display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}}
+  /* ── 슬라이더 (style.css hero-img-wrap 안에서 동작) ── */
+  .hero-img-wrap{{position:relative;overflow:hidden}}
+  .sl-track{{position:absolute;inset:0;display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}}
   .slide{{flex:0 0 100%;height:100%;overflow:hidden}}
   .slide img{{width:100%;height:100%;object-fit:cover;display:block}}
+  /* 점(dots) */
   .sl-dots{{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2}}
-  .sl-dot{{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45);transition:background .3s,transform .3s;cursor:pointer}}
-  .sl-dot-active{{background:#fff;transform:scale(1.3)}}
-  /* ── H1 배지 스타일 ─────────────────────── */
-  .site-headline{{display:flex;flex-direction:column;gap:.4rem;margin:0 0 1.2rem}}
-  .headline-badge{{display:inline-block;background:#F97316;color:#fff;font-size:.75rem;font-weight:700;padding:.3rem .9rem;border-radius:20px;letter-spacing:.06em;width:fit-content}}
-  .headline-main{{font-size:1.75rem;font-weight:800;color:#fff;line-height:1.25;word-break:keep-all}}
-  .headline-sub{{font-size:.95rem;color:rgba(255,255,255,.65)}}
-  .site-tagline{{font-size:.88rem;color:rgba(255,255,255,.45);line-height:1.8}}
-  /* ── 상세 이미지 ────────────────────────── */
+  .sl-dot{{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:background .3s,transform .3s;cursor:pointer}}
+  .sl-dot-active{{background:#F97316;transform:scale(1.35)}}
+  /* 화살표 */
+  .sl-arrow{{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.88);border:none;border-radius:50%;width:34px;height:34px;font-size:20px;line-height:1;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;color:#444;box-shadow:0 2px 8px rgba(0,0,0,.18);transition:opacity .2s}}
+  .sl-arrow:hover{{opacity:.9}}
+  .sl-prev{{left:8px}}
+  .sl-next{{right:8px}}
+  /* ── 상세 이미지 ─── */
   .detail-section .container{{display:flex;flex-direction:column;align-items:center;gap:0}}
   .detail-section img{{width:100%;max-width:680px;height:auto;display:block}}
-  /* ── content-list 박스형 ────────────────── */
+  /* ── content-list 박스형 ─── */
   .content-list{{list-style:none;padding:0;margin:.8rem 0 0;display:grid;gap:.5rem}}
   .content-list li{{background:#fff8f3;border-left:3px solid #F97316;padding:.7rem 1rem;border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.6;color:#333}}
-  /* ── info-table (2열) ───────────────────── */
+  /* ── info-table ─── */
   .info-table{{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}}
   .info-table th{{background:#F97316;color:#fff;padding:.6rem 1rem;text-align:left;font-size:.85rem;font-weight:600;white-space:nowrap;width:7em}}
   .info-table td{{padding:.65rem 1rem;font-size:.9rem;border-bottom:1px solid #f0f0f0;color:#333;word-break:keep-all}}
   .info-table tr:last-child td{{border-bottom:none}}
-  /* ── compare-table (3열) ────────────────── */
+  /* ── compare-table ─── */
   .compare-table{{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:.85rem}}
-  .compare-table thead th{{background:#1a1a2e;color:#fff;padding:.65rem .8rem;text-align:center;font-weight:600}}
+  .compare-table thead th{{background:#F97316;color:#fff;padding:.65rem .8rem;text-align:center;font-weight:600}}
   .compare-table tbody td{{padding:.6rem .8rem;border-bottom:1px solid #f0f0f0;color:#333;text-align:center;vertical-align:top}}
   .compare-table tbody tr:nth-child(even){{background:#fafafa}}
   .compare-table tbody tr:last-child td{{border-bottom:none}}
-  /* ── FAQ dl/dt/dd ────────────────────────── */
+  /* ── FAQ ─── */
   .faq-list{{margin:.8rem 0 0}}
   .faq-q{{font-weight:700;color:#F97316;padding:.8rem 1rem .4rem;background:#fff8f3;border-radius:8px 8px 0 0;margin-top:.8rem;font-size:.9rem;display:block}}
   .faq-a{{margin:0;padding:.5rem 1rem .8rem;background:#fff8f3;border-radius:0 0 8px 8px;font-size:.88rem;color:#555;line-height:1.65;display:block}}
-  /* ── 모바일 ─────────────────────────────── */
-  @media(max-width:768px){{
-    .hero-inner{{flex-direction:column;min-height:auto}}
-    .hero-img-wrap{{flex:none;width:100%;height:260px;position:relative}}
-    .hero-text{{padding:1.5rem 1rem}}
-    .headline-main{{font-size:1.35rem}}
-  }}
   </style>
   <script type="application/ld+json">
 {jld}
@@ -804,21 +797,30 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
 
   <script>
   (function(){{
-    var track=document.querySelector('.sl-track');
-    var dots=document.querySelectorAll('.sl-dot');
-    if(!track||!dots.length)return;
-    var n=dots.length,idx=0;
+    var wrap=document.querySelector('.hero-img-wrap');
+    var track=wrap&&wrap.querySelector('.sl-track');
+    var dots=wrap?wrap.querySelectorAll('.sl-dot'):[];
+    if(!track)return;
+    var n=dots.length||1,idx=0;
     function go(i){{
       idx=(i+n)%n;
       track.style.transform='translateX(-'+idx*100+'%)';
-      dots.forEach(function(d,j){{
-        d.classList.toggle('sl-dot-active',j===idx);
-      }});
+      dots.forEach(function(d,j){{d.classList.toggle('sl-dot-active',j===idx);}});
     }}
     dots.forEach(function(d,i){{d.addEventListener('click',function(){{go(i);}});}});
+    var prev=wrap.querySelector('.sl-prev'),next=wrap.querySelector('.sl-next');
+    if(prev)prev.addEventListener('click',function(){{go(idx-1);}});
+    if(next)next.addEventListener('click',function(){{go(idx+1);}});
     var timer=setInterval(function(){{go(idx+1);}},3500);
-    track.parentElement.addEventListener('mouseenter',function(){{clearInterval(timer);}});
-    track.parentElement.addEventListener('mouseleave',function(){{timer=setInterval(function(){{go(idx+1);}},3500);}});
+    wrap.addEventListener('mouseenter',function(){{clearInterval(timer);}});
+    wrap.addEventListener('mouseleave',function(){{timer=setInterval(function(){{go(idx+1);}},3500);}});
+    /* 터치 스와이프 */
+    var tx=0;
+    wrap.addEventListener('touchstart',function(e){{tx=e.touches[0].clientX;}},{{passive:true}});
+    wrap.addEventListener('touchend',function(e){{
+      var dx=e.changedTouches[0].clientX-tx;
+      if(Math.abs(dx)>40)go(dx<0?idx+1:idx-1);
+    }});
   }})();
   </script>
   <script type="text/javascript" src="//wcs.pstatic.net/wcslog.js" defer></script>

@@ -31,58 +31,47 @@
   <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="image" href="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EC%9B%90%EC%A0%95%EB%A9%B4,co_white,o_25,g_south_west,x_10,y_6/academy/1학원정면.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="https://res.cloudinary.com/dg9uf6vh6/image/upload/a_90/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EC%9B%90%EC%A0%95%EB%A9%B4,co_white,o_25,g_south_west,x_10,y_6/academy/1학원정면.webp" fetchpriority="high">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@800&display=swap"></noscript>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-  /* ── 히어로 ─────────────────────────────── */
-  .hero{background:#1a1a2e;overflow:hidden}
-  .hero-inner{display:flex;flex-direction:row-reverse;align-items:stretch;max-width:1200px;margin:0 auto;min-height:420px}
-  .hero-img-wrap{flex:0 0 48%;overflow:hidden;position:relative}
-  .hero-text{flex:1;padding:2.5rem 2.5rem 2.5rem 3rem;display:flex;flex-direction:column;justify-content:center;color:#fff}
-  /* ── 슬라이더 (가로 슬라이드) ─────────── */
-  .sl-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}
+  /* ── 슬라이더 (style.css hero-img-wrap 안에서 동작) ── */
+  .hero-img-wrap{position:relative;overflow:hidden}
+  .sl-track{position:absolute;inset:0;display:flex;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform}
   .slide{flex:0 0 100%;height:100%;overflow:hidden}
   .slide img{width:100%;height:100%;object-fit:cover;display:block}
+  /* 점(dots) */
   .sl-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2}
-  .sl-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.45);transition:background .3s,transform .3s;cursor:pointer}
-  .sl-dot-active{background:#fff;transform:scale(1.3)}
-  /* ── H1 배지 스타일 ─────────────────────── */
-  .site-headline{display:flex;flex-direction:column;gap:.4rem;margin:0 0 1.2rem}
-  .headline-badge{display:inline-block;background:#F97316;color:#fff;font-size:.75rem;font-weight:700;padding:.3rem .9rem;border-radius:20px;letter-spacing:.06em;width:fit-content}
-  .headline-main{font-size:1.75rem;font-weight:800;color:#fff;line-height:1.25;word-break:keep-all}
-  .headline-sub{font-size:.95rem;color:rgba(255,255,255,.65)}
-  .site-tagline{font-size:.88rem;color:rgba(255,255,255,.45);line-height:1.8}
-  /* ── 상세 이미지 ────────────────────────── */
+  .sl-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:background .3s,transform .3s;cursor:pointer}
+  .sl-dot-active{background:#F97316;transform:scale(1.35)}
+  /* 화살표 */
+  .sl-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.88);border:none;border-radius:50%;width:34px;height:34px;font-size:20px;line-height:1;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;color:#444;box-shadow:0 2px 8px rgba(0,0,0,.18);transition:opacity .2s}
+  .sl-arrow:hover{opacity:.9}
+  .sl-prev{left:8px}
+  .sl-next{right:8px}
+  /* ── 상세 이미지 ─── */
   .detail-section .container{display:flex;flex-direction:column;align-items:center;gap:0}
   .detail-section img{width:100%;max-width:680px;height:auto;display:block}
-  /* ── content-list 박스형 ────────────────── */
+  /* ── content-list 박스형 ─── */
   .content-list{list-style:none;padding:0;margin:.8rem 0 0;display:grid;gap:.5rem}
   .content-list li{background:#fff8f3;border-left:3px solid #F97316;padding:.7rem 1rem;border-radius:0 8px 8px 0;font-size:.9rem;line-height:1.6;color:#333}
-  /* ── info-table (2열) ───────────────────── */
+  /* ── info-table ─── */
   .info-table{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
   .info-table th{background:#F97316;color:#fff;padding:.6rem 1rem;text-align:left;font-size:.85rem;font-weight:600;white-space:nowrap;width:7em}
   .info-table td{padding:.65rem 1rem;font-size:.9rem;border-bottom:1px solid #f0f0f0;color:#333;word-break:keep-all}
   .info-table tr:last-child td{border-bottom:none}
-  /* ── compare-table (3열) ────────────────── */
+  /* ── compare-table ─── */
   .compare-table{width:100%;border-collapse:collapse;margin:.8rem 0 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:.85rem}
-  .compare-table thead th{background:#1a1a2e;color:#fff;padding:.65rem .8rem;text-align:center;font-weight:600}
+  .compare-table thead th{background:#F97316;color:#fff;padding:.65rem .8rem;text-align:center;font-weight:600}
   .compare-table tbody td{padding:.6rem .8rem;border-bottom:1px solid #f0f0f0;color:#333;text-align:center;vertical-align:top}
   .compare-table tbody tr:nth-child(even){background:#fafafa}
   .compare-table tbody tr:last-child td{border-bottom:none}
-  /* ── FAQ dl/dt/dd ────────────────────────── */
+  /* ── FAQ ─── */
   .faq-list{margin:.8rem 0 0}
   .faq-q{font-weight:700;color:#F97316;padding:.8rem 1rem .4rem;background:#fff8f3;border-radius:8px 8px 0 0;margin-top:.8rem;font-size:.9rem;display:block}
   .faq-a{margin:0;padding:.5rem 1rem .8rem;background:#fff8f3;border-radius:0 0 8px 8px;font-size:.88rem;color:#555;line-height:1.65;display:block}
-  /* ── 모바일 ─────────────────────────────── */
-  @media(max-width:768px){
-    .hero-inner{flex-direction:column;min-height:auto}
-    .hero-img-wrap{flex:none;width:100%;height:260px;position:relative}
-    .hero-text{padding:1.5rem 1rem}
-    .headline-main{font-size:1.35rem}
-  }
   </style>
   <script type="application/ld+json">
 {
@@ -274,14 +263,16 @@
       <div class="hero-inner">
         <div class="hero-img-wrap">
           <div class="sl-track">
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EC%9B%90%EC%A0%95%EB%A9%B4,co_white,o_25,g_south_west,x_10,y_6/academy/1학원정면.webp" alt="연신내 영어학원 학원정면" loading="eager" fetchpriority="high" decoding="sync" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%9D%BC%EB%8C%80%EC%9D%BC%EC%88%98%EC%97%85,co_white,o_25,g_south_west,x_10,y_6/academy/2일대일수업.webp" alt="연신내 영어학원 일대일수업" loading="lazy" decoding="async" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EA%B8%B0%EB%A7%90%EB%A6%AC%EB%B7%B0,co_white,o_25,g_south_west,x_10,y_6/academy/3기말리뷰.webp" alt="연신내 영어학원 기말리뷰" loading="lazy" decoding="async" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%BD%94%EC%B9%AD,co_white,o_25,g_south_west,x_10,y_6/academy/4코칭.webp" alt="연신내 영어학원 코칭" loading="lazy" decoding="async" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%88%98%EC%97%85%EC%A4%91,co_white,o_25,g_south_west,x_10,y_6/academy/5수업중.webp" alt="연신내 영어학원 수업중" loading="lazy" decoding="async" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%83%81%EC%9E%A5,co_white,o_25,g_south_west,x_10,y_6/academy/6상장.webp" alt="연신내 영어학원 상장" loading="lazy" decoding="async" width="800" height="600"></div>
-          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_600,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EA%B5%90%EB%B3%84%EA%B8%B0%EC%B6%9C,co_white,o_25,g_south_west,x_10,y_6/academy/7학교별기출.webp" alt="연신내 영어학원 학교별기출" loading="lazy" decoding="async" width="800" height="600"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/a_90/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EC%9B%90%EC%A0%95%EB%A9%B4,co_white,o_25,g_south_west,x_10,y_6/academy/1학원정면.webp" alt="연신내 영어학원 학원정면" loading="eager" fetchpriority="high" decoding="sync" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%9D%BC%EB%8C%80%EC%9D%BC%EC%88%98%EC%97%85,co_white,o_25,g_south_west,x_10,y_6/academy/2일대일수업.webp" alt="연신내 영어학원 일대일수업" loading="lazy" decoding="async" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EA%B8%B0%EB%A7%90%EB%A6%AC%EB%B7%B0,co_white,o_25,g_south_west,x_10,y_6/academy/3기말리뷰.webp" alt="연신내 영어학원 기말리뷰" loading="lazy" decoding="async" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%BD%94%EC%B9%AD,co_white,o_25,g_south_west,x_10,y_6/academy/4코칭.webp" alt="연신내 영어학원 코칭" loading="lazy" decoding="async" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%88%98%EC%97%85%EC%A4%91,co_white,o_25,g_south_west,x_10,y_6/academy/5수업중.webp" alt="연신내 영어학원 수업중" loading="lazy" decoding="async" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%EC%83%81%EC%9E%A5,co_white,o_25,g_south_west,x_10,y_6/academy/6상장.webp" alt="연신내 영어학원 상장" loading="lazy" decoding="async" width="800" height="800"></div>
+          <div class="slide"><img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_800,h_800,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%98%81%EC%96%B4%ED%95%99%EC%9B%90%20%ED%95%99%EA%B5%90%EB%B3%84%EA%B8%B0%EC%B6%9C,co_white,o_25,g_south_west,x_10,y_6/academy/7학교별기출.webp" alt="연신내 영어학원 학교별기출" loading="lazy" decoding="async" width="800" height="800"></div>
           </div>
+          <button class="sl-arrow sl-prev" aria-label="이전 사진">&#8249;</button>
+          <button class="sl-arrow sl-next" aria-label="다음 사진">&#8250;</button>
           <div class="sl-dots">
           <span class="sl-dot  sl-dot-active"></span>
           <span class="sl-dot"></span>
@@ -375,7 +366,7 @@
     <p class="section-desc">연신내 수학·영어·국어 학원 16곳을 모았습니다.</p>
     <div class="academy-grid">
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%203060100%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/7_s5oz3w.webp" alt="연신내 3060100수학교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%203060100%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/6_outenk.webp" alt="연신내 3060100수학교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">3060100수학교습소</h3>
@@ -388,7 +379,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20MPM%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/16_kshki1.webp" alt="연신내 MPM영어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20MPM%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/9_cfwxso.webp" alt="연신내 MPM영어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">MPM영어교습소</h3>
@@ -401,7 +392,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B0%80%EB%A1%A0%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/8_wmax55.webp" alt="연신내 가론국어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B0%80%EB%A1%A0%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/13_u9t1h3.webp" alt="연신내 가론국어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">가론국어교습소</h3>
@@ -414,7 +405,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B5%AC%EC%82%B0%EC%B1%84%EC%9B%80%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/4_p7olqt.webp" alt="연신내 구산채움수학교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B5%AC%EC%82%B0%EC%B1%84%EC%9B%80%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/8_wmax55.webp" alt="연신내 구산채움수학교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">구산채움수학교습소</h3>
@@ -427,7 +418,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20YJ%EC%B5%9C%EA%B0%95%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/12_pi4we3.webp" alt="연신내 YJ최강영어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20YJ%EC%B5%9C%EA%B0%95%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/7_s5oz3w.webp" alt="연신내 YJ최강영어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">YJ최강영어교습소</h3>
@@ -440,7 +431,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B9%80%EC%88%98%EC%97%B0%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659609/11_ix4mpp.webp" alt="연신내 김수연국어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B9%80%EC%88%98%EC%97%B0%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/16_kshki1.webp" alt="연신내 김수연국어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">김수연국어교습소</h3>
@@ -466,7 +457,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B9%80%EC%9A%B0%ED%83%9D%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/14_reqxkg.webp" alt="연신내 김우택영어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B9%80%EC%9A%B0%ED%83%9D%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659609/11_ix4mpp.webp" alt="연신내 김우택영어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">김우택영어교습소</h3>
@@ -479,7 +470,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8B%AC%EB%A6%AC%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/13_u9t1h3.webp" alt="연신내 달리국어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8B%AC%EB%A6%AC%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659602/3_tbgizh.webp" alt="연신내 달리국어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">달리국어교습소</h3>
@@ -492,7 +483,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B6%8C%EC%84%A0%EC%83%9D%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/2_qasyxi.webp" alt="연신내 권선생수학교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B6%8C%EC%84%A0%EC%83%9D%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/14_reqxkg.webp" alt="연신내 권선생수학교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">권선생수학교습소</h3>
@@ -505,7 +496,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8D%94%EC%9E%90%EB%9E%8C%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659602/3_tbgizh.webp" alt="연신내 더자람영어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8D%94%EC%9E%90%EB%9E%8C%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/5_sk7t7e.webp" alt="연신내 더자람영어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">더자람영어교습소</h3>
@@ -518,7 +509,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%84%B1%EA%B7%A0%EA%B4%80%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659604/5_sk7t7e.webp" alt="연신내 성균관국어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%84%B1%EA%B7%A0%EA%B4%80%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/4_p7olqt.webp" alt="연신내 성균관국어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">성균관국어교습소</h3>
@@ -531,7 +522,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B7%B8%EB%A6%BF%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/10_qsoaya.webp" alt="연신내 그릿수학교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EA%B7%B8%EB%A6%BF%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/2_qasyxi.webp" alt="연신내 그릿수학교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">그릿수학교습소</h3>
@@ -544,7 +535,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%A0%88%EB%B2%A8%EC%97%85%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/1_w3frn8.webp" alt="연신내 레벨업영어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%A0%88%EB%B2%A8%EC%97%85%EC%98%81%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/10_qsoaya.webp" alt="연신내 레벨업영어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">레벨업영어교습소</h3>
@@ -557,7 +548,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%88%98%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/9_cfwxso.webp" alt="연신내 수국어교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EC%88%98%EA%B5%AD%EC%96%B4%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/12_pi4we3.webp" alt="연신내 수국어교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">수국어교습소</h3>
@@ -570,7 +561,7 @@
               </div>
             </article>
             <article class="academy-card">
-              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8D%94%EC%9D%B4%EB%A3%B8%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659605/6_outenk.webp" alt="연신내 더이룸수학교습소 내부"
+              <img src="https://res.cloudinary.com/dg9uf6vh6/image/upload/w_740,h_400,c_fill,q_auto,f_auto/l_text:NanumGothic_10:%EC%97%B0%EC%8B%A0%EB%82%B4%20%EB%8D%94%EC%9D%B4%EB%A3%B8%EC%88%98%ED%95%99%EA%B5%90%EC%8A%B5%EC%86%8C%20%EB%82%B4%EB%B6%80,co_white,o_25,g_south_west,x_10,y_6/v1778659603/1_w3frn8.webp" alt="연신내 더이룸수학교습소 내부"
                    class="academy-card-img" loading="lazy" width="740" height="400">
               <div class="academy-card-body">
                 <h3 class="academy-card-name">더이룸수학교습소</h3>
@@ -1614,21 +1605,30 @@
 
   <script>
   (function(){
-    var track=document.querySelector('.sl-track');
-    var dots=document.querySelectorAll('.sl-dot');
-    if(!track||!dots.length)return;
-    var n=dots.length,idx=0;
+    var wrap=document.querySelector('.hero-img-wrap');
+    var track=wrap&&wrap.querySelector('.sl-track');
+    var dots=wrap?wrap.querySelectorAll('.sl-dot'):[];
+    if(!track)return;
+    var n=dots.length||1,idx=0;
     function go(i){
       idx=(i+n)%n;
       track.style.transform='translateX(-'+idx*100+'%)';
-      dots.forEach(function(d,j){
-        d.classList.toggle('sl-dot-active',j===idx);
-      });
+      dots.forEach(function(d,j){d.classList.toggle('sl-dot-active',j===idx);});
     }
     dots.forEach(function(d,i){d.addEventListener('click',function(){go(i);});});
+    var prev=wrap.querySelector('.sl-prev'),next=wrap.querySelector('.sl-next');
+    if(prev)prev.addEventListener('click',function(){go(idx-1);});
+    if(next)next.addEventListener('click',function(){go(idx+1);});
     var timer=setInterval(function(){go(idx+1);},3500);
-    track.parentElement.addEventListener('mouseenter',function(){clearInterval(timer);});
-    track.parentElement.addEventListener('mouseleave',function(){timer=setInterval(function(){go(idx+1);},3500);});
+    wrap.addEventListener('mouseenter',function(){clearInterval(timer);});
+    wrap.addEventListener('mouseleave',function(){timer=setInterval(function(){go(idx+1);},3500);});
+    /* 터치 스와이프 */
+    var tx=0;
+    wrap.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;},{passive:true});
+    wrap.addEventListener('touchend',function(e){
+      var dx=e.changedTouches[0].clientX-tx;
+      if(Math.abs(dx)>40)go(dx<0?idx+1:idx-1);
+    });
   })();
   </script>
   <script type="text/javascript" src="//wcs.pstatic.net/wcslog.js" defer></script>

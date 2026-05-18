@@ -12,6 +12,7 @@ import sys
 import hashlib
 import urllib.parse
 from pathlib import Path
+from datetime import date
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -20,7 +21,6 @@ from all_card import get_academies, make_section as make_card_section
 # ── 경로 상수 ─────────────────────────────────────────────────────────
 BASE      = Path(r'C:\Users\tlsdy\OneDrive\바탕 화면\새로운학원')
 BODUN     = Path(r'C:\Users\tlsdy\OneDrive\바탕 화면\본문뽑기')
-TARGET_DO = '서울특별시'
 SITE      = 'https://energyplus.kr'
 BRAND     = '동네학원 찾기 - 에너지+'
 CLOUD     = 'https://res.cloudinary.com/dg9uf6vh6/image/upload'
@@ -130,8 +130,8 @@ def load_dong_loc_map():
     return result
 
 
-def load_si_loc_map(loc_ids: dict) -> dict:
-    """학원목록.txt → {si: [public_id, ...]} (서울특별시 기준)"""
+def load_si_loc_map(loc_ids: dict, target_do: str) -> dict:
+    """학원목록.txt → {si: [public_id, ...]}"""
     result: dict[str, list] = {}
     cur_do = cur_si = ''
     with open(BASE / '학원목록.txt', encoding='utf-8') as f:
@@ -141,7 +141,7 @@ def load_si_loc_map(loc_ids: dict) -> dict:
                 continue
             if cols[0].strip(): cur_do = cols[0].strip()
             if cols[1].strip(): cur_si = cols[1].strip()
-            if cur_do != TARGET_DO or not cur_si:
+            if cur_do != target_do or not cur_si:
                 continue
             loc_key = cols[4].strip()
             if loc_key:
@@ -153,8 +153,8 @@ def load_si_loc_map(loc_ids: dict) -> dict:
     return result
 
 
-def load_si_dong_map() -> dict:
-    """학원목록.txt → {si: [dong, ...]} (서울특별시 기준)"""
+def load_si_dong_map(target_do: str) -> dict:
+    """학원목록.txt → {si: [dong, ...]}"""
     result: dict[str, list] = {}
     cur_do = cur_si = ''
     with open(BASE / '학원목록.txt', encoding='utf-8') as f:
@@ -164,7 +164,7 @@ def load_si_dong_map() -> dict:
                 continue
             if cols[0].strip(): cur_do = cols[0].strip()
             if cols[1].strip(): cur_si = cols[1].strip()
-            if cur_do != TARGET_DO or not cur_si:
+            if cur_do != target_do or not cur_si:
                 continue
             dong = cols[3].strip()
             if dong:
@@ -542,8 +542,8 @@ def make_json_ld(level: int, do: str, si: str, dong: str, grade: str, kw: str,
             'headline': title,
             'description': desc,
             'image': og_img,
-            'datePublished': '2026-05-16',
-            'dateModified': '2026-05-16',
+            'datePublished': date.today().isoformat(),
+            'dateModified': date.today().isoformat(),
             'author': {'@type': 'Organization', 'name': BRAND, 'url': f'{SITE}/'},
             'publisher': {
                 '@type': 'Organization',
@@ -635,7 +635,8 @@ def make_head(title: str, desc: str, canon: str, og_img: str, kw_meta: str,
   <meta name="keywords" content="{kw_meta}">
   <meta name="author" content="{BRAND}">
   <meta name="robots" content="index, follow">
-  <meta name="naver-site-verification" content="6c8552333b0e48ee6249eeecfdd0e6c5c62384eb">
+  <meta name="google-site-verification" content="E5MOZUCWsEWJ8-gXXLa_GiL1vDgL6m5hjGJCYpn-U9M">
+  <meta name="naver-site-verification" content="6dbb42d9ed3cf3f460292fa31f398e73b2689eb4">
   <meta property="og:type" content="article">
   <meta property="og:title" content="{title}">
   <meta property="og:description" content="{desc}">
@@ -811,16 +812,16 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <h3 class="footer-slogan">아이들의 성장을 응원합니다</h3>
+      <p class="footer-slogan">아이들의 성장을 응원합니다</p>
       <p class="footer-sub">전국 동네 학원 정보를 정성껏 모아드립니다</p>
       <div class="footer-divider"></div>
-      <h4 class="footer-info">
+      <p class="footer-info">
         <span>대표번호 <a href="tel:010-3952-5815">010-3952-5815</a></span>
         <span class="sep"> | </span>
         <span>대표자명 에너지+</span>
         <span class="sep"> | </span>
         <span>이메일 <a href="mailto:info@energyplus.kr">info@energyplus.kr</a></span>
-      </h4>
+      </p>
       <p class="footer-contact">학원 등록 문의는 이메일로 부탁드립니다.</p>
       <p class="footer-copy">&copy; 2026 {BRAND}. All rights reserved.</p>
     </div>
@@ -873,59 +874,68 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
 
 def main():
     print('데이터 로드 중...')
-    titles      = load_titles()
-    grade_kws   = load_grade_keywords()
-    loc_ids     = load_location_ids()
-    dong_loc    = load_dong_loc_map()
-    si_loc      = load_si_loc_map(loc_ids)
-    si_dong_map = load_si_dong_map()
-    print(f'  타이틀: {len(titles)}개 / 위치사진 ID: {len(loc_ids)}개 / 시동 맵: {len(si_dong_map)}개 시')
+    titles    = load_titles()
+    grade_kws = load_grade_keywords()
+    loc_ids   = load_location_ids()
+    dong_loc  = load_dong_loc_map()
+    print(f'  타이틀: {len(titles)}개 / 위치사진 ID: {len(loc_ids)}개')
 
-    bodun_do = BODUN / TARGET_DO
-    count = skip = 0
+    # 처리할 도 목록: BODUN 하위 디렉터리 중 DO_CODE에 있는 것만
+    do_list = sorted(
+        d.name for d in BODUN.iterdir()
+        if d.is_dir() and d.name in DO_CODE
+    )
+    print(f'  처리할 도: {do_list}')
 
-    for result_path in sorted(bodun_do.rglob('result.html')):
-        # 경로 분해
-        rel   = result_path.relative_to(bodun_do).parts[:-1]  # result.html 제외
-        level = len(rel) + 1
+    total_count = total_skip = 0
 
-        do    = TARGET_DO
-        si    = rel[0] if len(rel) >= 1 else ''
-        dong  = rel[1] if len(rel) >= 2 else ''
-        grade = rel[2] if len(rel) >= 3 else ''
-        kw    = rel[3] if len(rel) >= 4 else ''
+    for target_do in do_list:
+        print(f'\n[ {target_do} ] 처리 시작')
+        si_loc      = load_si_loc_map(loc_ids, target_do)
+        si_dong_map = load_si_dong_map(target_do)
+        bodun_do    = BODUN / target_do
+        count = skip = 0
 
-        # JSON 로드
-        try:
-            with open(result_path, encoding='utf-8') as f:
-                data = json.load(f)
-        except Exception as e:
-            print(f'  [JSON 오류] {result_path.relative_to(BODUN)}: {e}')
-            skip += 1
-            continue
+        for result_path in sorted(bodun_do.rglob('result.html')):
+            rel   = result_path.relative_to(bodun_do).parts[:-1]
+            level = len(rel) + 1
 
-        # 출력 경로
-        if rel:
-            out_path = BASE / TARGET_DO / Path(*rel) / 'index.html'
-        else:
-            out_path = BASE / TARGET_DO / 'index.html'
-        out_path.parent.mkdir(parents=True, exist_ok=True)
+            do    = target_do
+            si    = rel[0] if len(rel) >= 1 else ''
+            dong  = rel[1] if len(rel) >= 2 else ''
+            grade = rel[2] if len(rel) >= 3 else ''
+            kw    = rel[3] if len(rel) >= 4 else ''
 
-        # HTML 생성
-        try:
-            html = make_html(level, do, si, dong, grade, kw, data, titles,
-                             dong_loc, loc_ids, si_loc, grade_kws, si_dong_map)
-            out_path.write_text(html, encoding='utf-8')
-            label = '/'.join(rel) if rel else do
-            print(f'  lv{level} {label}')
-            count += 1
-        except Exception as e:
-            import traceback
-            print(f'  [생성 오류] {"/".join(rel)}: {e}')
-            traceback.print_exc()
-            skip += 1
+            try:
+                with open(result_path, encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception as e:
+                print(f'  [JSON 오류] {result_path.relative_to(BODUN)}: {e}')
+                skip += 1
+                continue
 
-    print(f'\n완료: {count}개 생성 / {skip}개 오류')
+            if rel:
+                out_path = BASE / target_do / Path(*rel) / 'index.html'
+            else:
+                out_path = BASE / target_do / 'index.html'
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+
+            try:
+                html = make_html(level, do, si, dong, grade, kw, data, titles,
+                                 dong_loc, loc_ids, si_loc, grade_kws, si_dong_map)
+                out_path.write_text(html, encoding='utf-8')
+                count += 1
+            except Exception as e:
+                import traceback
+                print(f'  [생성 오류] {"/".join(rel)}: {e}')
+                traceback.print_exc()
+                skip += 1
+
+        print(f'  → {count}개 생성 / {skip}개 오류')
+        total_count += count
+        total_skip  += skip
+
+    print(f'\n전체 완료: {total_count}개 생성 / {total_skip}개 오류')
 
 
 if __name__ == '__main__':

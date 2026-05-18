@@ -712,7 +712,7 @@ def make_html(level: int, do: str, si: str, dong: str, grade: str, kw: str,
     page_key = f'{do}/{si}/{dong}/{grade}/{kw}'
     tv       = pick_title(titles, page_key)
     title    = build_title(level, do, si, dong, grade, kw, tv)
-    desc     = data.get('meta', '') + ' 문의: 010-3952-5815'
+    desc     = data.get('meta', '')
     kw_meta  = build_kw_meta(level, do, si, dong, grade, kw)
     akw      = get_area_kw(level, do, si, dong, grade)
 

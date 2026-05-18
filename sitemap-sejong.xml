@@ -115,6 +115,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://energyplus.kr/세종시/세종/새롬/메인학원/검정고시학원/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://energyplus.kr/세종시/세종/새롬/메인학원/공부방/</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
@@ -535,6 +541,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://energyplus.kr/세종시/세종/새롬동/메인학원/검정고시학원/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://energyplus.kr/세종시/세종/새롬동/메인학원/공부방/</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
@@ -950,6 +962,12 @@
   </url>
   <url>
     <loc>https://energyplus.kr/세종시/세종/세종/메인학원/개별진도학원/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://energyplus.kr/세종시/세종/세종/메인학원/검정고시학원/</loc>
     <lastmod>2026-05-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

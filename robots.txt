@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://energyplus.kr/sitemap-index.xml
+Sitemap: https://energyplus.kr/sitemap.xml

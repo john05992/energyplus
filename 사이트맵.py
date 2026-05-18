@@ -9,6 +9,7 @@ sitemap-index.xml + 도별 sitemap-{en}.xml 16개 생성.
 """
 
 import sys
+import urllib.parse
 from pathlib import Path
 from datetime import date
 
@@ -54,7 +55,8 @@ def path_to_url(html_path: Path) -> str:
     parts = rel.parts
     if not parts or parts == ('.',):
         return f'{SITE}/'
-    return SITE + '/' + '/'.join(parts) + '/'
+    encoded = '/'.join(urllib.parse.quote(p, safe='') for p in parts)
+    return SITE + '/' + encoded + '/'
 
 
 def get_level(html_path: Path) -> int:
@@ -92,6 +94,9 @@ def main():
     root_entries.append(make_url_entry(f'{SITE}/', pri, freq))
 
     for html in sorted(BASE.rglob('index.html')):
+        rel_check = html.relative_to(BASE).parts
+        if rel_check and rel_check[0] == '과외':
+            continue
         level = get_level(html)
         url   = path_to_url(html)
         pri, freq = LEVEL_CONFIG.get(level, ('0.4', 'monthly'))
@@ -123,7 +128,7 @@ def main():
         sitemap_files.insert(0, (root_file, len(root_entries)))
         print(f'  {root_file}: {len(root_entries)}개')
 
-    # sitemap-index.xml 생성
+    # sitemap.xml 생성 (인덱스)
     index_entries = '\n'.join(
         f'  <sitemap>\n'
         f'    <loc>{SITE}/{fname}</loc>\n'
@@ -137,10 +142,10 @@ def main():
         + index_entries + '\n'
         '</sitemapindex>\n'
     )
-    (BASE / 'sitemap-index.xml').write_text(index_xml, encoding='utf-8')
+    (BASE / 'sitemap.xml').write_text(index_xml, encoding='utf-8')
 
     total = sum(c for _, c in sitemap_files)
-    print(f'\n완료: sitemap-index.xml + {len(sitemap_files)}개 파일 / 총 {total}개 URL')
+    print(f'\n완료: sitemap.xml + {len(sitemap_files)}개 파일 / 총 {total}개 URL')
 
 
 if __name__ == '__main__':
